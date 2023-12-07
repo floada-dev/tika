@@ -68,6 +68,10 @@ public class ContentHandlerDecorator extends DefaultHandler {
         this.handler = handler;
     }
 
+    public ContentHandler getHandler() {
+        return handler;
+    }
+
     @Override
     public void startPrefixMapping(String prefix, String uri) throws SAXException {
         try {
@@ -174,7 +178,7 @@ public class ContentHandlerDecorator extends DefaultHandler {
      * provides a single place to implement custom exception handling. The
      * default behaviour is simply to re-throw the given exception, but
      * subclasses can also provide alternative ways of handling the situation.
-     * 
+     *
      * If the wrapped handler is itself a ContentHandlerDecorator, the call
      * is delegated to the wrapped handler's {@link ContentHandlerDecorator#handleException(SAXException)}
      *
@@ -215,5 +219,23 @@ public class ContentHandlerDecorator extends DefaultHandler {
         } else {
             super.fatalError(exception);
         }
+    }
+
+    /**
+     * Return first nested ContentHandler matching type T, or null if none match
+     *
+     * @param nestedHandlerClass class instance to look for
+     * @return nested handler of type T
+     * @param <T> Class of nested ContentHandler
+     */
+    public <T extends ContentHandler> T getFirst(Class<T> nestedHandlerClass) {
+        ContentHandler ch = this;
+        while (ch instanceof ContentHandlerDecorator) {
+            if (nestedHandlerClass.isInstance(ch)) {
+                return nestedHandlerClass.cast(ch);
+            }
+            ch = ((ContentHandlerDecorator) ch).getHandler();
+        }
+        return null;
     }
 }
