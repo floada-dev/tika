@@ -14,21 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.tika;
+package org.apache.tika.parser.pdf;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.junit.jupiter.api.Test;
+import org.apache.pdfbox.text.TextPosition;
+import org.xml.sax.ContentHandler;
 
-public class TikaIT {
+import org.apache.tika.sax.ContentHandlerDecorator;
 
-    @Test
-    public void testToString() {
-        String version = new Tika().toString();
-        assertNotNull(version);
-        assertTrue(
-                version.matches("Apache Tika \\d+\\.\\d+\\.\\d+(-(?:ALPHA|BETA|floada)\\d*)?(?:-SNAPSHOT)?"));
+
+public class PositionContentHandler extends ContentHandlerDecorator {
+
+    private final Map<Integer, List<TextPosition>> textPositions = new LinkedHashMap<>();
+
+    public PositionContentHandler(ContentHandler contentHandler) {
+        super(contentHandler);
     }
 
+    public Map<Integer, List<TextPosition>> getTextPositions() {
+        return textPositions;
+    }
+
+    public void addPositions(Integer page, List<TextPosition> positions) {
+        this.textPositions.computeIfAbsent(page, p -> new ArrayList<>()).addAll(positions);
+    }
 }
