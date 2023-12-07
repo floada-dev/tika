@@ -35,6 +35,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
+import org.apache.tika.sax.ContentHandlerDecorator;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -96,9 +97,12 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             // Extract text using a dummy Writer as we override the
             // key methods to output to the given content
             // handler.
-            if (config.isDetectAngles()) {
-                pdf2XHTML =
-                        new AngleDetectingPDF2XHTML(document, handler, context, metadata, config);
+            PositionContentHandler ph;
+            if (handler instanceof ContentHandlerDecorator &&
+                    (ph = ((ContentHandlerDecorator) handler).getFirst(PositionContentHandler.class)) != null) {
+                pdf2XHTML = new PositionAwarePDF2XHTML(document, handler, ph, context, metadata, config);
+            } else if (config.isDetectAngles()) {
+                pdf2XHTML = new AngleDetectingPDF2XHTML(document, handler, context, metadata, config);
             } else {
                 pdf2XHTML = new PDF2XHTML(document, handler, context, metadata, config);
             }
@@ -264,6 +268,31 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             xhtml.newline();
         } catch (SAXException e) {
             throw new IOException("Unable to write a newline character", e);
+        }
+    }
+
+    private static class PositionAwarePDF2XHTML extends PDF2XHTML {
+
+        private int currentPage = 0;
+        private final PositionContentHandler positionContentHandler;
+
+        PositionAwarePDF2XHTML(PDDocument document, ContentHandler handler,
+                               PositionContentHandler positionContentHandler, ParseContext context,
+                               Metadata metadata, PDFParserConfig config) throws IOException {
+            super(document, handler, context, metadata, config);
+            this.positionContentHandler = positionContentHandler;
+        }
+
+        @Override
+        protected void startPage(PDPage page) throws IOException {
+            super.startPage(page);
+            currentPage++;
+        }
+
+        @Override
+        protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
+            super.writeString(text);
+            positionContentHandler.addPositions(currentPage, textPositions);
         }
     }
 
