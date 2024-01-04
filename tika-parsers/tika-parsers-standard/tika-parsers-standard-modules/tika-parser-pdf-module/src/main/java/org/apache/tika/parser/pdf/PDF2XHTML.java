@@ -273,6 +273,9 @@ class PDF2XHTML extends AbstractPDF2XHTML {
 
     private static class PositionAwarePDF2XHTML extends PDF2XHTML {
 
+        private static final char NL = '\n';
+        private static final char WS = ' ';
+
         private int currentPage = 0;
         private final PositionContentHandler positionContentHandler;
 
@@ -293,6 +296,76 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
             super.writeString(text);
             positionContentHandler.addPositions(currentPage, textPositions);
+        }
+
+        @Override
+        protected void writeLineSeparator() throws IOException {
+            super.writeLineSeparator();
+            addCharacter(WS, true);
+        }
+
+        @Override
+        protected void writeWordSeparator() throws IOException {
+            super.writeWordSeparator();
+            addCharacter(WS, true);
+        }
+
+        @Override
+        protected void writeParagraphEnd() throws IOException {
+            super.writeParagraphEnd();
+            addCharacter(NL, false);
+            addCharacter(NL, false);
+        }
+
+        private void addCharacter(char character, boolean skipRepeats) {
+            List<TextPosition> textPositions = positionContentHandler.getTextPositions().get(currentPage);
+
+            if (textPositions == null || textPositions.isEmpty()) {
+                return;
+            }
+
+            TextPosition last = textPositions.get(textPositions.size() - 1);
+            if (character == NL && " ".equals(last.getUnicode())) {
+                textPositions.remove(last);
+                if (textPositions.isEmpty()) {
+                    return;
+                }
+
+                last = textPositions.get(textPositions.size() - 1);
+            }
+
+            String stringChar = String.valueOf(character);
+            if (skipRepeats && stringChar.equals(last.getUnicode())) {
+                return;
+            }
+
+            TextPosition lineSeparator = getTextPosition(character, last);
+            textPositions.add(lineSeparator);
+        }
+
+        private static TextPosition getTextPosition(char character, TextPosition last) {
+            Matrix textMatrix = last.getTextMatrix();
+            // Set start x to endX of last char
+            textMatrix.setValue(2, 0, last.getEndX());
+
+            int[] charCodes = new int[]{character};
+
+            return new TextPosition(
+                    last.getRotation(),
+                    last.getPageWidth(),
+                    last.getPageHeight(),
+                    textMatrix,
+                    last.getEndX() + 0.01f,
+                    last.getEndY(),
+                    last.getHeight(),
+                    last.getWidth(),
+                    last.getWidthOfSpace(),
+                    String.valueOf(character),
+                    charCodes,
+                    last.getFont(),
+                    last.getFontSize(),
+                    Math.round(last.getFontSizeInPt())
+            );
         }
     }
 
