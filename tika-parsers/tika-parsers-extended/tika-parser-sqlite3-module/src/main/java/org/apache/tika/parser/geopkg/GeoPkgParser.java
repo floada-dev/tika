@@ -14,80 +14,81 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.tika.parser.sqlite3;
+package org.apache.tika.parser.geopkg;
 
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import org.apache.tika.config.Initializable;
+import org.apache.tika.config.Field;
 import org.apache.tika.config.InitializableProblemHandler;
 import org.apache.tika.config.Param;
 import org.apache.tika.exception.TikaConfigException;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.sqlite3.SQLite3Parser;
 
 /**
- * This is the main class for parsing SQLite3 files.  When {@link #parse} is called,
- * this creates a new {@link SQLite3DBParser}.
- * <p/>
- * Given potential conflicts of native libraries in web servers, users will
- * need to add org.xerial's sqlite-jdbc jar to the class path for this parser
- * to work.  For development and testing, this jar is specified in tika-parsers'
- * pom.xml, but it is currently set to "provided."
- * <p/>
- * Note that this family of jdbc parsers is designed to treat each CLOB and each BLOB
- * as an embedded document; i.e. it will recursively process documents that are stored
- * in a sqlite db as "bytes".
- * <p/>
- * If using a TikaInputStream, make sure to close it to delete the temp file
- * that has to be created.
+ * Customization of sqlite parser to skip certain common blob columns.
+ * <p>
+ * The motivation is that "geom" and "data" columns are intrinsic to geopkg
+ * and are not regular embedded files. Tika treats all blob columns as, potentially,
+ * embedded files -- this can add dramatically to the time to parse geopkg
+ * files, which might have hundreds of thousands of uninteresting blobs.
+ * <p>
+ * Users may modify which columns are ignored or turn off "ignoring"
+ * of all solumns.
+ * <p>
+ * To add a column to the default "ignore blob columns" via tika-config.xml:
+ *  <pre>{@code}
+ *   <parsers>
+ *     <parser class="org.apache.tika.parser.DefaultParser"/>
+ *     <parser class="org.apache.tika.parser.geopkg.GeoPkgParser">
+ *       <param name="ignoreBlobColumns" type="list">
+ *         <string>geom</string>
+ *         <string>data</string>
+ *         <string>something</string>
+ *       </param>
+ *     </parser>
+ *   </parsers>
+ *   }</pre>
+ * <p>
+ *   Or use an empty list to parse all columns.
  */
-public class SQLite3Parser implements Parser, Initializable {
-
-    public static final String SQLITE3_PREFIX = "sqlite3:";
-
-    /**
-     * Base16 encoded integer representing the "application id"
-     */
-    public static final Property SQLITE_APPLICATION_ID =
-            Property.internalText(SQLITE3_PREFIX + "application_id");
-
-    /**
-     * Base16 encoded integer representing the "user version"
-     */
-    public static final Property SQLITE_USER_VERSION =
-            Property.internalText(SQLITE3_PREFIX + "user_version");
+public class GeoPkgParser extends SQLite3Parser {
 
     /**
      * Serial version UID
      */
     private static final long serialVersionUID = -752276948656079347L;
 
-    private static final MediaType MEDIA_TYPE = MediaType.application("x-sqlite3");
+    private static final MediaType MEDIA_TYPE = MediaType.application("x-geopackage");
 
     private static final Set<MediaType> SUPPORTED_TYPES;
+
 
     static {
         SUPPORTED_TYPES = Collections.singleton(MEDIA_TYPE);
     }
 
+    private static final Set<String> DEFAULT_IGNORE_BLOB_COLUMNS = Set.of("geom", "data");
+    private Set<String> ignoreBlobColumns = new HashSet<>(DEFAULT_IGNORE_BLOB_COLUMNS);
     /**
      * Checks to see if class is available for org.sqlite.JDBC.
      * <p/>
      * If not, this class will return an EMPTY_SET for  getSupportedTypes()
      */
-    public SQLite3Parser() {
+    public GeoPkgParser() {
 
     }
 
@@ -99,10 +100,15 @@ public class SQLite3Parser implements Parser, Initializable {
     @Override
     public void parse(InputStream stream, ContentHandler handler, Metadata metadata,
                       ParseContext context) throws IOException, SAXException, TikaException {
-        SQLite3DBParser p = new SQLite3DBParser();
+        GeoPkgDBParser p = new GeoPkgDBParser(ignoreBlobColumns);
         p.parse(stream, handler, metadata, context);
     }
 
+    @Field
+    public void setIgnoreBlobColumns(List<String> ignoreBlobColumns) {
+        this.ignoreBlobColumns.clear();
+        this.ignoreBlobColumns.addAll(ignoreBlobColumns);
+    }
     /**
      * No-op
      *

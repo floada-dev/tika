@@ -366,15 +366,18 @@
     <glob pattern="*.ser"/>
   </mime-type>
 
-  <mime-type type="application/javascript">
+  <mime-type type="text/javascript">
+    <alias type="application/javascript"/>
     <alias type="application/x-javascript"/>
-    <alias type="text/javascript"/>
     <sub-class-of type="text/plain"/>
     <_comment>JavaScript Source Code</_comment>
+    <!-- From RFC 9239: https://www.rfc-editor.org/rfc/rfc9239.html#name-text-javascript -->
+    <!-- File extension(s): .js, .mjs -->
     <glob pattern="*.js"/>
+    <glob pattern="*.mjs"/>
 
     <!-- Note - there is no Unique Magic for JavaScript files! -->
-    <!-- Generally you can only detect JS with the filename -->
+    <!-- Generally, you can only detect JS with the filename -->
     <!-- However... A few common JS libraries accidentally trigger -->
     <!--  the HTML priority=20 magic incorrectly. So, for those only, -->
     <!--  we list "magic" for those specific files -->
@@ -4855,11 +4858,114 @@
   </mime-type>
 
   <mime-type type="application/x-sqlite3">
+    <!--sqlite subtypes are from: https://www.sqlite.org/src/artifact?ci=trunk&filename=magic.txt -->
     <magic priority="50">
       <match value="SQLite format 3\x00" type="string" offset="0"/>
     </magic>
   </mime-type>
-
+  <!-- geo package >= 1.2.x -->
+  <mime-type type="application/x-geopackage">
+    <url>https://www.geopackage.org/</url>
+    <!-- should be higher than application/x-sqlite3 -->
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x47504b47" type="string" offset="68"/>
+      </match>
+    </magic>
+    <glob pattern="*.gpkg"/>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <!-- geo package 1.0.x or 1.1.x -->
+  <mime-type type="application/x-geopackage; version=1.1Or1.0">
+    <url>https://www.geopackage.org/</url>
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x47503130" type="string" offset="68"/>
+      </match>
+    </magic>
+    <glob pattern="*.gpkg"/>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-fossil-checkout">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x0f055112" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-fossil-checkout">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x0f055112" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-fossil-global-conf">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x0f055113" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-fossil-repository">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x0f055111" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-bentley-besqlite">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x42654462" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-bentley-localization">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x42654c6e" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-monotone-source-repo">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x5f4d544e" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-esri-spatially-enabled-db">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x45737269" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-mbtiles">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x4d504258" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
+  <mime-type type="application/x-texnicard">
+    <magic priority="60">
+      <match value="SQLite format 3\x00" type="string" offset="0">
+        <match value="0x6a035744" type="string" offset="68"/>
+      </match>
+    </magic>
+    <sub-class-of type="application/x-sqlite3"/>
+  </mime-type>
   <mime-type type="application/x-stata-do">
     <_comment>Stata DTA Script</_comment>
     <acronym>DO</acronym>
@@ -5147,6 +5253,8 @@
     <!-- Always seem to have a version integer as their first entry, -->
     <!--  normally 00, 01 or 02, check for that -->
     <magic priority="40">
+      <match value="0x3080020100" type="string"
+              mask="0xFFFFFFFFFC" offset="0"/>
       <match value="0x3081FF020100" type="string"
               mask="0xFFFF00FFFFFC" offset="0"/>
       <match value="0x3082FFFF020100" type="string"
@@ -6594,8 +6702,16 @@
     <acronym>PBM</acronym>
     <_comment>Portable Bit Map</_comment>
     <magic priority="50">
-      <match value="P1" type="string" offset="0"/>
-      <match value="P4" type="string" offset="0"/>
+      <match value="P1" type="string" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
+      <match value="P4" type="regex" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
     </magic>
     <glob pattern="*.pbm"/>
   </mime-type>
@@ -6605,9 +6721,16 @@
     <acronym>PGM</acronym>
     <_comment>Portable Graymap Graphic</_comment>
     <magic priority="50">
-      <match value="P2" type="string" offset="0"/>
-      <match value="P5" type="string" offset="0"/>
-      <match offset="0" type="string" value="\x50\x35\x0a"/>
+      <match value="P2" type="string" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
+      <match value="P5" type="regex" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
     </magic>
     <glob pattern="*.pgm"/>
   </mime-type>
@@ -6617,13 +6740,33 @@
     <acronym>PXM</acronym>
     <_comment>UNIX Portable Bitmap Graphic</_comment>
     <magic priority="50">
-      <match value="P3" type="string" offset="0"/>
-      <match value="P6" type="string" offset="0"/>
-      <match value="P7" type="string" offset="0"/>
-       <match offset="0" type="string" value="\x50\x34\x0a"/>
+      <match value="P3" type="string" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
+      <match value="P6" type="regex" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
     </magic>
     <glob pattern="*.ppm"/>
   </mime-type>
+  <mime-type type="image/x-portable-arbitrarymap">
+    <sub-class-of type="image/x-portable-anymap"/>
+    <acronym>PAM</acronym>
+    <_comment>UNIX Portable Bitmap Graphic Arbitrary Map</_comment>
+    <magic priority="50">
+      <match value="P7" type="string" offset="0">
+        <match value="\x0a" type="string" offset="2"/>
+        <match value="\x0d" type="string" offset="2"/>
+        <match value="\x20" type="string" offset="2"/>
+      </match>
+    </magic>
+    <glob pattern="*.pam"/>
+  </mime-type>
+
 
   <mime-type type="image/x-raw-adobe">
     <acronym>DNG</acronym>
