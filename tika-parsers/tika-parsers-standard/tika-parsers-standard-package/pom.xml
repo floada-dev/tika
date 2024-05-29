@@ -43,21 +43,21 @@
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>${project.groupId}</groupId>-->
-<!--      <artifactId>tika-parser-apple-module</artifactId>-->
-<!--      <version>${project.version}</version>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>${project.groupId}</groupId>-->
-<!--      <artifactId>tika-parser-audiovideo-module</artifactId>-->
-<!--      <version>${project.version}</version>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>${project.groupId}</groupId>-->
-<!--      <artifactId>tika-parser-cad-module</artifactId>-->
-<!--      <version>${project.version}</version>-->
-<!--    </dependency>-->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>tika-parser-apple-module</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>tika-parser-audiovideo-module</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>tika-parser-cad-module</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>tika-parser-code-module</artifactId>
