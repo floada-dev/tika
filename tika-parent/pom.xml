@@ -31,7 +31,7 @@
 
   <groupId>org.apache.tika</groupId>
   <artifactId>tika-parent</artifactId>
-  <version>3.0.0-floada.beta2</version>
+  <version>3.0.0-floada.beta3</version>
   <packaging>pom</packaging>
 
   <name>Apache Tika parent</name>
@@ -1032,7 +1032,7 @@
           <artifactId>hdf5-platform</artifactId>
           <version>${hdf5.version}</version>
       </dependency>
-      <!-- avoid convergence problems related to 
+      <!-- avoid convergence problems related to
            google-cloud-storage:2.38.0 (2.26.1) and gson:2.11.0 (2.27.0) -->
       <dependency>
           <groupId>com.google.errorprone</groupId>
