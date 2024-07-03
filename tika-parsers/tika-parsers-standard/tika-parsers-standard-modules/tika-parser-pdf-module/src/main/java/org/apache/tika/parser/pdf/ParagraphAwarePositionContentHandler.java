@@ -36,9 +36,9 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     @Override
-    void nextPage() {
+    void nextPage(float width, float height) {
         int pageNumber = pages.size();
-        PdfPage page = new PdfPage(++pageNumber);
+        PdfPage page = new PdfPage(++pageNumber, width, height);
         pages.add(page);
     }
 

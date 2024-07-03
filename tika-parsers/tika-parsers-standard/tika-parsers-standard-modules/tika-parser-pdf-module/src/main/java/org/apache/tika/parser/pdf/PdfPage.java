@@ -6,10 +6,26 @@ import java.util.List;
 public class PdfPage {
 
     private final int pageNumber;
+    private final float width;
+    private final float height;
     private final List<PdfParagraph> paragraphs = new ArrayList<>();
 
-    PdfPage(int pageNumber) {
+    PdfPage(int pageNumber, float width, float height) {
         this.pageNumber = pageNumber;
+        this.width = width;
+        this.height = height;
+    }
+
+    public int getPageNumber() {
+        return pageNumber;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return height;
     }
 
     public void addParagraph() {
@@ -21,10 +37,6 @@ public class PdfPage {
 
     public PdfParagraph getLastParagraph() {
         return paragraphs.get(paragraphs.size() - 1);
-    }
-
-    public int getPageNumber() {
-        return pageNumber;
     }
 
     public List<PdfParagraph> getParagraphs() {

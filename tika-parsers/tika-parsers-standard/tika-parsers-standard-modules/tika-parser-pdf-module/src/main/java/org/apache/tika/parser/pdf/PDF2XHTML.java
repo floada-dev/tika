@@ -32,6 +32,7 @@ import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
@@ -284,7 +285,8 @@ class PDF2XHTML extends AbstractPDF2XHTML {
 
         @Override
         protected void startPage(PDPage page) throws IOException {
-            positionContentHandler.nextPage();
+            PDRectangle pageBox = page.getCropBox();
+            positionContentHandler.nextPage(pageBox.getWidth(), pageBox.getHeight());
             super.startPage(page);
         }
 
