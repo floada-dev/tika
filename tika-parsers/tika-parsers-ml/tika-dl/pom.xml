@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parsers-ml</artifactId>
-    <version>3.0.0-floada.beta3</version>
+    <version>3.0.0-floada.beta4</version>
   </parent>
 
   <artifactId>tika-dl</artifactId>
