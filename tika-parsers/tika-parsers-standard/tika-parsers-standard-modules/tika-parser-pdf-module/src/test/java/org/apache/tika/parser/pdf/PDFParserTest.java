@@ -36,8 +36,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.text.TextPosition;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -548,7 +550,7 @@ public class PDFParserTest extends TikaTest {
        assertContains("to: John Doe", txt);
        //checkbox
        assertContains("xpackaging: Yes", txt);
-       
+
        //this guarantees that the form processor
        //worked recursively at least once...i.e. it didn't just
        //take the first form
@@ -556,8 +558,8 @@ public class PDFParserTest extends TikaTest {
        txt = getText(stream, p, context);
        stream.close();
        assertContains("123 Main St.", txt);
-       
-       
+
+
        //now test with nonsequential parser
        PDFParserConfig config = new PDFParserConfig();
        config.setUseNonSequentialParser(true);
@@ -565,19 +567,19 @@ public class PDFParserTest extends TikaTest {
        stream = getResourceAsStream("/test-documents/testPDF_acroForm1.pdf");
        txt = getText(stream, p, context);
        stream.close();
-       
+
        //simple first level form contents
        assertContains("to: John Doe", txt);
        //checkbox
        assertContains("xpackaging: Yes", txt);
-       
+
        //this guarantees that the form processor
        //worked recursively at least once...i.e. it didn't just
        //take the first form
        stream = getResourceAsStream("/test-documents/testPDF_acroForm2.pdf");
        txt = getText(stream, p, context);
        assertContains("123 Main St.", txt);
-       stream.close();     
+       stream.close();
     }
 */
 
@@ -1444,30 +1446,115 @@ public class PDFParserTest extends TikaTest {
      */
 
     /**
+     * @Test public void testWriteLimit() throws Exception {
+     * for (int i = 0; i < 10000; i += 13) {
+     * Metadata metadata = testWriteLimit("testPDF_childAttachments.pdf", i);
+     * assertEquals("true", metadata.get(TikaCoreProperties.WRITE_LIMIT_REACHED));
+     * int len = metadata.get(TikaCoreProperties.TIKA_CONTENT).length();
+     * System.out.println(len + " : " + i);
+     * assertTrue(len <= i);
+     * }
+     * }
+     * <p>
+     * private Metadata testWriteLimit(String fileName, int limit) throws Exception {
+     * BasicContentHandlerFactory factory = new BasicContentHandlerFactory(
+     * BasicContentHandlerFactory.HANDLER_TYPE.TEXT, limit
+     * );
+     * ContentHandler contentHandler = factory.getNewContentHandler();
+     * Metadata metadata = new Metadata();
+     * ParseContext parseContext = new ParseContext();
+     * try (InputStream is = getResourceAsStream("/test-documents/" + fileName)) {
+     * AUTO_DETECT_PARSER.parse(is, contentHandler, metadata, parseContext);
+     * } catch (WriteLimitReachedException e) {
+     * //e.printStackTrace();
+     * }
+     * metadata.set(TikaCoreProperties.TIKA_CONTENT, contentHandler.toString());
+     * return metadata;
+     * }
+     */
+
     @Test
-    public void testWriteLimit() throws Exception {
-        for (int i = 0; i < 10000; i += 13) {
-            Metadata metadata = testWriteLimit("testPDF_childAttachments.pdf", i);
-            assertEquals("true", metadata.get(TikaCoreProperties.WRITE_LIMIT_REACHED));
-            int len = metadata.get(TikaCoreProperties.TIKA_CONTENT).length();
-            System.out.println(len + " : " + i);
-            assertTrue(len <= i);
-        }
+    public void testPdfParsingWithPositionsSmallDoc() throws Exception {
+        CharacterPositionContentHandler contentHandler = new CharacterPositionContentHandler(new BodyContentHandler(-1));
+        parse("testPDF.pdf", contentHandler);
+        Map<Integer, List<TextPosition>> textPositions = contentHandler.getTextPositions();
+
+        assertEquals(1, textPositions.size());
+        assertEquals(1058, textPositions.get(1).size());
+        List<TextPosition> pagePositions = textPositions.get(1);
+        assertTrue(pagePositions.stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
     }
 
-    private Metadata testWriteLimit(String fileName, int limit) throws Exception {
-        BasicContentHandlerFactory factory = new BasicContentHandlerFactory(
-                BasicContentHandlerFactory.HANDLER_TYPE.TEXT, limit
-        );
-        ContentHandler contentHandler = factory.getNewContentHandler();
-        Metadata metadata = new Metadata();
-        ParseContext parseContext = new ParseContext();
-        try (InputStream is = getResourceAsStream("/test-documents/" + fileName)) {
-            AUTO_DETECT_PARSER.parse(is, contentHandler, metadata, parseContext);
-        } catch (WriteLimitReachedException e) {
-            //e.printStackTrace();
-        }
-        metadata.set(TikaCoreProperties.TIKA_CONTENT, contentHandler.toString());
-        return metadata;
-    }*/
+    @Test
+    public void testPdfParsingWithPositionsLargerDoc() throws Exception {
+        CharacterPositionContentHandler contentHandler = new CharacterPositionContentHandler(new BodyContentHandler(-1));
+        parse("distr_agreement_5pg.pdf", contentHandler);
+        Map<Integer, List<TextPosition>> positions = contentHandler.getTextPositions();
+
+        assertEquals(5, positions.size());
+        assertEquals(3165, positions.get(1).size());
+        assertEquals(2504, positions.get(5).size());
+        positions.forEach((pn, tps) -> assertTrue(tps.stream().noneMatch(tp -> tp.getUnicode().isEmpty())));
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsSmallDoc() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("testPDF.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(1, pages.size());
+        PdfPage page = pages.get(0);
+        assertEquals(1, page.getPageNumber());
+        List<PdfParagraph> paragraphs = page.getNonEmptyParagraphs();
+        assertEquals(8, paragraphs.size());
+
+        paragraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+        });
+        List<PdfParagraph> endsWithEmpty = paragraphs.stream().filter(p -> p.toString().endsWith(" ")).collect(Collectors.toList());
+        // Two are valid ending with whitespace in this doc
+        assertEquals(2, endsWithEmpty.size());
+
+        // Two long paragraphs which were previously split into multiple paragraphs each
+        assertTrue(paragraphs.stream().anyMatch(p -> p.toString().equals(
+                "Apache Tika is a toolkit for detecting and extracting metadata and structured text content from various documents using existing parser libraries. "
+        )));
+        assertTrue(paragraphs.stream().anyMatch(p -> p.toString().equals(
+                "Apache Tika is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Lucene PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF."
+        )));
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsLargerDoc() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("distr_agreement_5pg.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(5, pages.size());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getNonEmptyParagraphs();
+        assertEquals(21, pageOneParagraphs.size());
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        // Some long line breaking paragraphs should remain as single paragraphs
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "IN ACCORDANCE WITH ITEM 601(b) OF REGULATION S-K, CERTAIN IDENTIFIED INFORMATION (THE “CONFIDENTIALINFORMATION”) HAS BEEN EXCLUDED FROM THIS EXHIBIT BECAUSE IT IS BOTH (I) NOT MATERIAL AND (II) WOULD LIKELY CAUSE COMPETITIVE HARM IF PUBLICLY DISCLOSED. THE CONFIDENTIAL INFORMATION IS DENOTED HEREIN BY [*****]."
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "ScanSource Brazil Distribuidora de Technologias, Ltda., a ScanSource Affiliate incorporated and organized under the laws of Brazil, with officesin the City of Säo José dos Pinhais, State of Paranå, at Avenida Rui Barbosa, 2529, Modulos 11 and 12, Bairro Jardim Ipé, CEP: 83055-320, enrolledwith the Taxpayer Register (CNPJ/MF) under No. 05.607.657/0001-35 (\"ScanSource Brazil\")"
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "WHEREAS:(A) On February 12, 2014 the Parties entered into an agreement that was renamed, as of April 11, 2016, to: PartnerConnectTM EVM Distribution Agreement, (as amended) (\"Distribution Agreement\"), which relates to Zebra Enterprise Visibility and Mobility ('EVM\") products andservices, and which, as acknowledged by the Parties by entering into this Amendment, is in full force and effect and valid as when thisAmendment is executed;"
+        )));
+    }
 }
