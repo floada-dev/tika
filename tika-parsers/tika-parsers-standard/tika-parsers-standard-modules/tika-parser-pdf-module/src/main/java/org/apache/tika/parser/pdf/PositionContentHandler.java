@@ -103,7 +103,7 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
         );
     }
 
-    abstract void nextPage();
+    abstract void nextPage(float width, float height);
     abstract void addPositions(List<TextPosition> positions);
     abstract List<TextPosition> getLastTextPositions();
 }
