@@ -1479,12 +1479,8 @@ public class PDFParserTest extends TikaTest {
         parse("testPDF.pdf", contentHandler);
         Map<Integer, List<TextPosition>> textPositions = contentHandler.getTextPositions();
 
-        float pageWidth = contentHandler.getPageWidth();
-        float pageHeight = contentHandler.getPageHeight();
-        assertEquals(595.0, pageWidth);
-        assertEquals(842.0, pageHeight);
-        assertEquals(pageWidth, textPositions.get(1).get(0).getPageWidth());
-        assertEquals(pageHeight, textPositions.get(1).get(0).getPageHeight());
+        assertEquals(595.0, textPositions.get(1).get(0).getPageWidth());
+        assertEquals(842.0, textPositions.get(1).get(0).getPageHeight());
 
         assertEquals(1, textPositions.size());
         assertEquals(1058, textPositions.get(1).size());

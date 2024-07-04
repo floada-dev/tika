@@ -28,8 +28,6 @@ import org.xml.sax.ContentHandler;
 public class CharacterPositionContentHandler extends PositionContentHandler {
 
     private int pageNumber = 0;
-    private float pageWidth = 0;
-    private float pageHeight = 0;
     private final Map<Integer, List<TextPosition>> textPositions = new LinkedHashMap<>();
 
     public CharacterPositionContentHandler(ContentHandler contentHandler) {
@@ -40,19 +38,9 @@ public class CharacterPositionContentHandler extends PositionContentHandler {
         return textPositions;
     }
 
-    public float getPageWidth() {
-        return pageWidth;
-    }
-
-    public float getPageHeight() {
-        return pageHeight;
-    }
-
     @Override
     void nextPage(float width, float height) {
         pageNumber++;
-        this.pageWidth = width;
-        this.pageHeight = height;
     }
 
     @Override
