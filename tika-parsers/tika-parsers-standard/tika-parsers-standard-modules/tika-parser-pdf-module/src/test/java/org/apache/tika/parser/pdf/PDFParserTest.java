@@ -1566,5 +1566,40 @@ public class PDFParserTest extends TikaTest {
         assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
                 "WHEREAS:(A) On February 12, 2014 the Parties entered into an agreement that was renamed, as of April 11, 2016, to: PartnerConnectTM EVM Distribution Agreement, (as amended) (\"Distribution Agreement\"), which relates to Zebra Enterprise Visibility and Mobility ('EVM\") products andservices, and which, as acknowledged by the Parties by entering into this Amendment, is in full force and effect and valid as when thisAmendment is executed;"
         )));
+
+        assertEquals(7, pages.get(4).getNonEmptyParagraphs().size());
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsLargeLineHeightDoc() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("msa_indemnification.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(28, pages.size());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getNonEmptyParagraphs();
+        assertEquals(6, pageOneParagraphs.size());
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        // Some long line breaking paragraphs should remain as single paragraphs
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "This Master Service Agreement (the â€œMSAâ€�) is entered into between COMPANY A, LLC (â€œCOMPANY Aâ€�), a Georgia limited liability corporation, and PDX COMPANY INC______________________ (â€œClientâ€� or â€œyouâ€�)."
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "THIS AGREEMENT is dated for reference this 21st day of October, 2003."
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, oﬃcers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€™ fees, expertâ€™s fees and settlement costs) arising out of any."
+        )));
+
+        assertEquals(3, pages.get(3).getNonEmptyParagraphs().size());
     }
 }
