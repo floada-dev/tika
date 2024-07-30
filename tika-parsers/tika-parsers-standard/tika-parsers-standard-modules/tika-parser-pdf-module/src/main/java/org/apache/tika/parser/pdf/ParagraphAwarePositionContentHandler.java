@@ -24,7 +24,6 @@ import java.util.List;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
 
-    private static final float PARAGRAPH_SPACING_THRESHOLD = 10.0f;
     private final List<PdfPage> pages = new ArrayList<>();
 
     public ParagraphAwarePositionContentHandler(ContentHandler contentHandler) {
@@ -65,8 +64,8 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
             float nextTopY = nextPosition.getY() - nextPosition.getHeight();
 
             // Force non-paragraph break if the perceived paragraphs are too close to each other.
-            // Almost certainly just a line break with larger spacing. Min space for paragraph break: PARAGRAPH_SPACING_THRESHOLD
-            if (Math.abs(nextTopY - lastBottomY) < PARAGRAPH_SPACING_THRESHOLD) {
+            // Almost certainly just a line break with larger spacing. Min space for paragraph break: 3 x height of text
+            if (Math.abs(nextTopY - lastBottomY) < 3 * nextPosition.getHeight()) {
                 paragraphs.remove(paragraphs.size() - 1);
                 addWhitespace();
                 lastNonEmptyParagraph.getTextPositions().addAll(positions);
