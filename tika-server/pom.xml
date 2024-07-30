@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>3.0.0-floada.beta7</version>
+    <version>3.0.0-floada.beta8</version>
     <relativePath>../tika-parent/pom.xml</relativePath>
   </parent>
 

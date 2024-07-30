@@ -40,6 +40,10 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
 
     }
 
+    void removeEmptyParagraph() {
+
+    }
+
     void addLineSeparator() {
 
     }
