@@ -319,6 +319,12 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             positionContentHandler.endParagraph();
             super.writeParagraphEnd();
         }
+
+        @Override
+        protected void endPage(PDPage page) throws IOException {
+            super.endPage(page);
+            positionContentHandler.removeEmptyParagraph();
+        }
     }
 
     private static class AngleDetectingPDF2XHTML extends PDF2XHTML {

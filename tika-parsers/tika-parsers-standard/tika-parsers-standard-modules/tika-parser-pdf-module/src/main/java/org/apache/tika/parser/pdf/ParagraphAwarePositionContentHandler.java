@@ -47,12 +47,26 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     @Override
+    void removeEmptyParagraph() {
+        PdfPage lastPage = getLastPage();
+        List<TextPosition> lastParagraphTextPositions = lastPage.getLastParagraph().getTextPositions();
+        if (lastParagraphTextPositions.isEmpty()) {
+            List<PdfParagraph> lastPageParagraphs = lastPage.getParagraphs();
+            lastPageParagraphs.remove(lastPageParagraphs.size() - 1);
+        }
+    }
+
+    @Override
     List<TextPosition> getLastTextPositions() {
         return getLastPage().getLastParagraph().getTextPositions();
     }
 
     @Override
     void addPositions(List<TextPosition> positions) {
+        if (positions.stream().allMatch(p -> p.getUnicode().isBlank())) {
+           return;
+        }
+
         List<PdfParagraph> paragraphs = getLastPage().getParagraphs();
         List<TextPosition> lastTextPositions = getLastTextPositions();
 

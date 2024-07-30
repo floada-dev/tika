@@ -1016,12 +1016,12 @@ public class PDFParserTest extends TikaTest {
         //from the history section
         assertArrayEquals(
                 new String[]{"uuid:0313504b-a0b0-4dac-a9f0-357221f2eadf",
-                    "uuid:edc4279e-0d5f-465e-b13e-1298402fd11c",
-                    "uuid:f565b775-43f3-4a9a-8541-e98c4115db6d",
-                    "uuid:9fd5e0a8-14a5-4920-ad7f-870c0b8ee65f",
-                    "uuid:09b6cfba-efde-4e07-a77f-70de858cc0aa",
-                    "uuid:1e4ffbd7-dabc-4aae-801c-15b3404ade36",
-                    "uuid:c1669773-a6ca-4bdd-aade-519030d0af00"},
+                        "uuid:edc4279e-0d5f-465e-b13e-1298402fd11c",
+                        "uuid:f565b775-43f3-4a9a-8541-e98c4115db6d",
+                        "uuid:9fd5e0a8-14a5-4920-ad7f-870c0b8ee65f",
+                        "uuid:09b6cfba-efde-4e07-a77f-70de858cc0aa",
+                        "uuid:1e4ffbd7-dabc-4aae-801c-15b3404ade36",
+                        "uuid:c1669773-a6ca-4bdd-aade-519030d0af00"},
                 m.getValues(XMPMM.HISTORY_EVENT_INSTANCEID));
 
         assertArrayEquals(
@@ -1433,6 +1433,7 @@ public class PDFParserTest extends TikaTest {
                 metadataList.get(1).get(TikaCoreProperties.EMBEDDED_EXCEPTION));
 
     }
+
     @Test
     public void testDefaultPDFOCR() throws Exception {
         //test that even with no ocr -- there is no tesseract ocr parser in this module --
@@ -1509,7 +1510,7 @@ public class PDFParserTest extends TikaTest {
         assertEquals(1, pages.size());
         PdfPage page = pages.get(0);
         assertEquals(1, page.getPageNumber());
-        List<PdfParagraph> paragraphs = page.getNonEmptyParagraphs();
+        List<PdfParagraph> paragraphs = page.getParagraphs();
         assertEquals(8, paragraphs.size());
 
         float width = page.getWidth();
@@ -1546,7 +1547,7 @@ public class PDFParserTest extends TikaTest {
         assertEquals(5, pages.size());
         PdfPage pageOne = pages.get(0);
         assertEquals(1, pageOne.getPageNumber());
-        List<PdfParagraph> pageOneParagraphs = pageOne.getNonEmptyParagraphs();
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
         assertEquals(21, pageOneParagraphs.size());
 
         pageOneParagraphs.forEach(para -> {
@@ -1567,7 +1568,7 @@ public class PDFParserTest extends TikaTest {
                 "WHEREAS:(A) On February 12, 2014 the Parties entered into an agreement that was renamed, as of April 11, 2016, to: PartnerConnectTM EVM Distribution Agreement, (as amended) (\"Distribution Agreement\"), which relates to Zebra Enterprise Visibility and Mobility ('EVM\") products andservices, and which, as acknowledged by the Parties by entering into this Amendment, is in full force and effect and valid as when thisAmendment is executed;"
         )));
 
-        assertEquals(7, pages.get(4).getNonEmptyParagraphs().size());
+        assertEquals(7, pages.get(4).getParagraphs().size());
     }
 
     @Test
@@ -1579,7 +1580,7 @@ public class PDFParserTest extends TikaTest {
         assertEquals(28, pages.size());
         PdfPage pageOne = pages.get(0);
         assertEquals(1, pageOne.getPageNumber());
-        List<PdfParagraph> pageOneParagraphs = pageOne.getNonEmptyParagraphs();
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
         assertEquals(6, pageOneParagraphs.size());
 
         pageOneParagraphs.forEach(para -> {
@@ -1600,6 +1601,42 @@ public class PDFParserTest extends TikaTest {
                 "14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, oﬃcers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€™ fees, expertâ€™s fees and settlement costs) arising out of any."
         )));
 
-        assertEquals(3, pages.get(3).getNonEmptyParagraphs().size());
+        assertEquals(3, pages.get(3).getParagraphs().size());
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsConvertedDocxToPdf() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("converted.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(20, pages.size());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
+        assertEquals(8, pageOneParagraphs.size());
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        // Some long line breaking paragraphs should remain as single paragraphs
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "This Master Service Agreement (the â€œMSAâ€) is entered into between COMPANY A, LLC (â€œCOMPANY Aâ€), a Georgia limited liability corporation, and PDX COMPANY INC______________________ (â€œClientâ€ or â€œyouâ€)."
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "THIS AGREEMENT is dated for reference this 21st day of October, 2003."
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, officers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€™ fees, expertâ€™s fees and settlement costs) arising out of any."
+        )));
+        assertTrue(pageOneParagraphs.stream().anyMatch(p -> p.toString().equals(
+                "23.6 Term: The term of this Agreement shall commence on the date first written above and shall continue until March 31, 2006, provided that Publisher shall have the option, via notice to Atari no later than February 15, 2006, to extend the term for an additional one-year period, through March 31, 2007, on the same terms and conditions (the \"TERM\"). The Term may be extended for one or more additional one (1) year periods via a mutually executed amendment to this Agreement. The three (3) month sell-off period shall commence as of the earlier expiration of this Agreement or upon notice of termination. Upon"
+        )));
+
+        assertEquals(7, pages.get(3).getParagraphs().size());
     }
 }
