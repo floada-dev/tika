@@ -63,32 +63,68 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
 
     @Override
     void addPositions(List<TextPosition> positions) {
+        // Trim string (last position)
+        if (positions.get(positions.size() - 1).getUnicode().isBlank()) {
+            positions.remove(positions.size() - 1);
+        }
+
         if (positions.stream().allMatch(p -> p.getUnicode().isBlank())) {
-           return;
+            return;
         }
 
         List<PdfParagraph> paragraphs = getLastPage().getParagraphs();
         List<TextPosition> lastTextPositions = getLastTextPositions();
 
+        // First text positions of a new paragraph (as identified by tika
         if (paragraphs.size() > 1 && lastTextPositions.isEmpty()) {
-            PdfParagraph lastNonEmptyParagraph = paragraphs.get(paragraphs.size() - 2);
-            List<TextPosition> lastNonEmptyParagraphPositions = lastNonEmptyParagraph.getTextPositions();
-            float lastBottomY = lastNonEmptyParagraphPositions.get(lastNonEmptyParagraphPositions.size() - 1).getY();
-            TextPosition nextPosition = positions.get(0);
-            float nextTopY = nextPosition.getY() - nextPosition.getHeight();
-
-            // Force non-paragraph break if the perceived paragraphs are too close to each other.
-            // Almost certainly just a line break with larger spacing. Min space for paragraph break: 3 x height of text
-            if (Math.abs(nextTopY - lastBottomY) < 3 * nextPosition.getHeight()) {
-                paragraphs.remove(paragraphs.size() - 1);
-                addWhitespace();
-                lastNonEmptyParagraph.getTextPositions().addAll(positions);
-            } else {
-                lastTextPositions.addAll(positions);
+            boolean mergedAndAdded = maybeMergeParagraphs(paragraphs, positions);
+            if (mergedAndAdded) {
+                return;
             }
-        } else {
-            lastTextPositions.addAll(positions);
+        } else if (!paragraphs.isEmpty() && !lastTextPositions.isEmpty()) {
+            boolean splitAndAdded = maybeSplitParagraph(lastTextPositions, positions);
+            if (splitAndAdded) {
+                return;
+            }
         }
+
+        lastTextPositions.addAll(positions);
+    }
+
+    private boolean maybeMergeParagraphs(List<PdfParagraph> paragraphs, List<TextPosition> currPositions) {
+        PdfParagraph lastNonEmptyParagraph = paragraphs.get(paragraphs.size() - 2);
+        List<TextPosition> lastNonEmptyParagraphPositions = lastNonEmptyParagraph.getTextPositions();
+        TextPosition lastPosition = lastNonEmptyParagraphPositions.get(lastNonEmptyParagraphPositions.size() - 1);
+
+        // Force paragraph merge if the perceived paragraphs are too close to each other.
+        // Almost certainly just a line break with maybe larger spacing. Min space for paragraph break: 2 x height of text
+        if (!lastAndCurrDistanceExceedThreshold(lastPosition, currPositions.get(0))) {
+            paragraphs.remove(paragraphs.size() - 1);
+            addWhitespace();
+            lastNonEmptyParagraph.getTextPositions().addAll(currPositions);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean maybeSplitParagraph(List<TextPosition> lastPositions, List<TextPosition> currPositions) {
+        TextPosition lastPosition = lastPositions.get(lastPositions.size() - 1);
+
+        // Force paragraph split when lines are too far from each other.
+        if (lastAndCurrDistanceExceedThreshold(lastPosition, currPositions.get(0))) {
+            nextParagraph();
+            addPositions(currPositions);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
+        float lastBottomY = lastPosition.getY();
+        float currTopY = currPosition.getY() - currPosition.getHeight();
+        return Math.abs(currTopY - lastBottomY) > 2 * currPosition.getHeight();
     }
 
     private PdfPage getLastPage() {
