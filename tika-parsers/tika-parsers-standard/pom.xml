@@ -21,7 +21,7 @@
   <parent>
     <artifactId>tika-parsers</artifactId>
     <groupId>org.apache.tika</groupId>
-    <version>3.0.0-floada.beta10</version>
+    <version>3.0.0-floada.beta11</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
