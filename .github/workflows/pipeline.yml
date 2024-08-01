@@ -49,6 +49,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Publish Internal tika-core and tika-parsers-standard-package
-        run: mvn --batch-mode -pl tika-core -pl :tika-parsers-standard-package -DskipTests -Dcheckstyle.skip deploy -am
+        run: mvn -e --batch-mode -pl tika-core -pl :tika-parsers-standard-package -DskipTests -Dcheckstyle.skip deploy -am
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
