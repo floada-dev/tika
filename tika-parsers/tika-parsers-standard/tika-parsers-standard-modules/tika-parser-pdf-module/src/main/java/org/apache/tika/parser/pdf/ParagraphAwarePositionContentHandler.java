@@ -127,8 +127,14 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
         float lastBottomY = lastPosition.getY();
         float currTopY = currPosition.getY() - currPosition.getHeight();
-        float charHeight = Math.max(currPosition.getHeight(), MIN_LINE_HEIGHT);
-        return Math.abs(currTopY - lastBottomY) > (2 * charHeight);
+
+        // Use min(curr, prev) height in case curr in some large heading, then smaller spacing makes sense as line break factor
+        float lowestCharHeight = Math.min(currPosition.getHeight(), lastPosition.getHeight());
+
+        // Use MIN_LINE_HEIGHT to avoid potential very "short" special chars causing breaks.
+        float safeCharHeight = Math.max(lowestCharHeight, MIN_LINE_HEIGHT);
+
+        return Math.abs(currTopY - lastBottomY) > (2 * safeCharHeight);
     }
 
     private PdfPage getLastPage() {
