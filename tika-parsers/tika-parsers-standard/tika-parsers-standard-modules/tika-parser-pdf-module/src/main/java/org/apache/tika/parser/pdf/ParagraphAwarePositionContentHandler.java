@@ -24,6 +24,8 @@ import java.util.List;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
 
+    private static final float MIN_LINE_HEIGHT = 4.0f;
+
     private final List<PdfPage> pages = new ArrayList<>();
 
     public ParagraphAwarePositionContentHandler(ContentHandler contentHandler) {
@@ -124,7 +126,7 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
         float lastBottomY = lastPosition.getY();
         float currTopY = currPosition.getY() - currPosition.getHeight();
-        float charHeight = Math.max(currPosition.getHeight(), lastPosition.getHeight());
+        float charHeight = Math.max(Math.max(currPosition.getHeight(), lastPosition.getHeight()), MIN_LINE_HEIGHT);
         return Math.abs(currTopY - lastBottomY) > 2 * charHeight;
     }
 
