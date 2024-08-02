@@ -124,7 +124,8 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
         float lastBottomY = lastPosition.getY();
         float currTopY = currPosition.getY() - currPosition.getHeight();
-        return Math.abs(currTopY - lastBottomY) > 2 * currPosition.getHeight();
+        float charHeight = Math.max(currPosition.getHeight(), lastPosition.getHeight());
+        return Math.abs(currTopY - lastBottomY) > 2 * charHeight;
     }
 
     private PdfPage getLastPage() {
