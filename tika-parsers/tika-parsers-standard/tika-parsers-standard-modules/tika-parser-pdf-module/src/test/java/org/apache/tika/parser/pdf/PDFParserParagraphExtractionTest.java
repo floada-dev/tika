@@ -145,28 +145,32 @@ public class PDFParserParagraphExtractionTest extends TikaTest {
 
         // Some long line breaking paragraphs should remain as single paragraphs
         assertEquals(
-                "IN ACCORDANCE WITH ITEM 601(b) OF REGULATION S-K, CERTAIN IDENTIFIED INFORMATION (THE “CONFIDENTIALINFORMATION”) HAS BEEN EXCLUDED FROM THIS EXHIBIT BECAUSE IT IS BOTH (I) NOT MATERIAL AND (II) WOULD LIKELY CAUSE COMPETITIVE HARM IF PUBLICLY DISCLOSED. THE CONFIDENTIAL INFORMATION IS DENOTED HEREIN BY [*****].",
+                "IN ACCORDANCE WITH ITEM 601(b) OF REGULATION S-K, CERTAIN IDENTIFIED INFORMATION (THE “CONFIDENTIAL INFORMATION”) HAS BEEN EXCLUDED FROM THIS EXHIBIT BECAUSE IT IS BOTH (I) NOT MATERIAL AND (II) WOULD LIKELY CAUSE COMPETITIVE HARM IF PUBLICLY DISCLOSED. THE CONFIDENTIAL INFORMATION IS DENOTED HEREIN BY [*****].",
                 pageOneParagraphs.get(1).toString()
         );
         assertEquals(
-                "THIS ADDENDUM (“Addendum”) is made on the 4th day of February 2019 (“Effective Date”) between the following parties:Zebra Technologies International, LLC, with an office at 3 Overlook Point, Lincolnshire IL 60069 (“Zebra”);",
+                "THIS ADDENDUM (“Addendum”) is made on the 4th day of February 2019 (“Effective Date”) between the following parties: Zebra Technologies International, LLC, with an office at 3 Overlook Point, Lincolnshire IL 60069 (“Zebra”);",
                 pageOneParagraphs.get(5).toString()
         );
         // '-' could be lower in height so make sure we don't split on that
         assertEquals(
-                "Zebra Technologies do Brasil - Comércio de Produtos de Informåtica Ltda., a company incorporated and organized under the laws of Brazil, withoffices at Av. Magalhäes de Castro, 4800, sala 72-A, Cidade Jardim, CEP 05676-120, Säo Paulo, sp (\"Zebra Brazil\")",
+                "Zebra Technologies do Brasil - Comércio de Produtos de Informåtica Ltda., a company incorporated and organized under the laws of Brazil, with offices at Av. Magalhäes de Castro, 4800, sala 72-A, Cidade Jardim, CEP 05676-120, Säo Paulo, sp (\"Zebra Brazil\")",
                 pageOneParagraphs.get(6).toString()
         );
         assertEquals(
-                "ScanSource Brazil Distribuidora de Technologias, Ltda., a ScanSource Affiliate incorporated and organized under the laws of Brazil, with officesin the City of Säo José dos Pinhais, State of Paranå, at Avenida Rui Barbosa, 2529, Modulos 11 and 12, Bairro Jardim Ipé, CEP: 83055-320, enrolledwith the Taxpayer Register (CNPJ/MF) under No. 05.607.657/0001-35 (\"ScanSource Brazil\")",
+                "Xplore Technologies Corporation of America, a company with its principal place of business at 8601 RR 2222, Building 2, Suite #100, Austin, Texas 78730, U.S.A. (“Xplore”);",
+                pageOneParagraphs.get(7).toString()
+        );
+        assertEquals(
+                "ScanSource Brazil Distribuidora de Technologias, Ltda., a ScanSource Affiliate incorporated and organized under the laws of Brazil, with offices in the City of Säo José dos Pinhais, State of Paranå, at Avenida Rui Barbosa, 2529, Modulos 11 and 12, Bairro Jardim Ipé, CEP: 83055-320, enrolled with the Taxpayer Register (CNPJ/MF) under No. 05.607.657/0001-35 (\"ScanSource Brazil\")",
                 pageOneParagraphs.get(12).toString()
         );
         assertEquals(
-                "WHEREAS:(A) On February 12, 2014 the Parties entered into an agreement that was renamed, as of April 11, 2016, to: PartnerConnectTM EVM Distribution Agreement, (as amended) (\"Distribution Agreement\"), which relates to Zebra Enterprise Visibility and Mobility ('EVM\") products andservices, and which, as acknowledged by the Parties by entering into this Amendment, is in full force and effect and valid as when thisAmendment is executed;",
+                "WHEREAS: (A) On February 12, 2014 the Parties entered into an agreement that was renamed, as of April 11, 2016, to: PartnerConnectTM EVM Distribution Agreement, (as amended) (\"Distribution Agreement\"), which relates to Zebra Enterprise Visibility and Mobility ('EVM\") products and services, and which, as acknowledged by the Parties by entering into this Amendment, is in full force and effect and valid as when this Amendment is executed;",
                 pageOneParagraphs.get(16).toString()
         );
         assertEquals(
-                "(D) Zebra has expanded its products portfolio by adding the product families listed in Exhibit A, that as of the Effective Date hereof arebranded Xplore or Motion Computing, thereto (“Xplore Products”); (E) Xplore, now a Zebra Affiliate, is the seller of Xplore Products;",
+                "(D) Zebra has expanded its products portfolio by adding the product families listed in Exhibit A, that as of the Effective Date hereof are branded Xplore or Motion Computing, thereto (“Xplore Products”); (E) Xplore, now a Zebra Affiliate, is the seller of Xplore Products;",
                 pageOneParagraphs.get(19).toString()
         );
 
@@ -278,7 +282,7 @@ public class PDFParserParagraphExtractionTest extends TikaTest {
                 pageOneParagraphs.get(1).toString()
         );
         assertEquals(
-                "THIS SOFTWARE LICENSE AGREEMENT (the “\u200BAgreement\u200B”) is made as of December 9, 2014 (the “\u200BEffective Date\u200B”) by and between Pear Therapeutics, Inc. (“\u200BPear\u200B”), a Delaware corporation having itsprincipal place of business at 55 Temple Place, Floor 3, Boston MA 02111, and Behavioural NeurologicalApplications and Solutions Inc. (“\u200BLicensor\u200B”), having his principal place of business at 100 College Street,Suite 213, Toronto, ON M5G 1L5.",
+                "THIS SOFTWARE LICENSE AGREEMENT (the “\u200BAgreement\u200B”) is made as of December 9, 2014 (the “\u200BEffective Date\u200B”) by and between Pear Therapeutics, Inc. (“\u200BPear\u200B”), a Delaware corporation having its principal place of business at 55 Temple Place, Floor 3, Boston MA 02111, and Behavioural Neurological Applications and Solutions Inc. (“\u200BLicensor\u200B”), having his principal place of business at 100 College Street, Suite 213, Toronto, ON M5G 1L5.",
                 pageOneParagraphs.get(2).toString()
         );
         assertEquals(
