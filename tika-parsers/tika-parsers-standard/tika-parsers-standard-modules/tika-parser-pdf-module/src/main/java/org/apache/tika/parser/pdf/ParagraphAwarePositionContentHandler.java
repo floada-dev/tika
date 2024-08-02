@@ -90,6 +90,7 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
             }
         }
 
+        addWhitespace();
         lastTextPositions.addAll(positions);
     }
 
@@ -126,8 +127,8 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
         float lastBottomY = lastPosition.getY();
         float currTopY = currPosition.getY() - currPosition.getHeight();
-        float charHeight = Math.max(Math.max(currPosition.getHeight(), lastPosition.getHeight()), MIN_LINE_HEIGHT);
-        return Math.abs(currTopY - lastBottomY) > 2 * charHeight;
+        float charHeight = Math.max(currPosition.getHeight(), MIN_LINE_HEIGHT);
+        return Math.abs(currTopY - lastBottomY) > (2 * charHeight);
     }
 
     private PdfPage getLastPage() {
