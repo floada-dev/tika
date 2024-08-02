@@ -149,6 +149,15 @@ public class PDFParserParagraphExtractionTest extends TikaTest {
                 pageOneParagraphs.get(1).toString()
         );
         assertEquals(
+                "THIS ADDENDUM (“Addendum”) is made on the 4th day of February 2019 (“Effective Date”) between the following parties:Zebra Technologies International, LLC, with an office at 3 Overlook Point, Lincolnshire IL 60069 (“Zebra”);",
+                pageOneParagraphs.get(5).toString()
+        );
+        // '-' could be lower in height so make sure we don't split on that
+        assertEquals(
+                "Zebra Technologies do Brasil - Comércio de Produtos de Informåtica Ltda., a company incorporated and organized under the laws of Brazil, withoffices at Av. Magalhäes de Castro, 4800, sala 72-A, Cidade Jardim, CEP 05676-120, Säo Paulo, sp (\"Zebra Brazil\")",
+                pageOneParagraphs.get(6).toString()
+        );
+        assertEquals(
                 "ScanSource Brazil Distribuidora de Technologias, Ltda., a ScanSource Affiliate incorporated and organized under the laws of Brazil, with officesin the City of Säo José dos Pinhais, State of Paranå, at Avenida Rui Barbosa, 2529, Modulos 11 and 12, Bairro Jardim Ipé, CEP: 83055-320, enrolledwith the Taxpayer Register (CNPJ/MF) under No. 05.607.657/0001-35 (\"ScanSource Brazil\")",
                 pageOneParagraphs.get(12).toString()
         );
