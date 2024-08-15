@@ -21,10 +21,12 @@ import org.xml.sax.ContentHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
 
     private static final float MIN_LINE_HEIGHT = 4.0f;
+    private float pageAverageLineHeight = 0f;
 
     private final List<PdfPage> pages = new ArrayList<>();
 
@@ -41,6 +43,9 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         int pageNumber = pages.size();
         PdfPage page = new PdfPage(++pageNumber, width, height);
         pages.add(page);
+
+        // Reset average line height per page
+        pageAverageLineHeight = 0f;
     }
 
     @Override
@@ -72,6 +77,17 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
 
         if (positions.stream().allMatch(p -> p.getUnicode().isBlank())) {
             return;
+        }
+
+        float positionsAverageHeight = positions.stream()
+                .map(TextPosition::getHeight)
+                .collect(Collectors.averagingDouble(h -> h))
+                .floatValue();
+
+        if (pageAverageLineHeight > 0) {
+            pageAverageLineHeight = (pageAverageLineHeight + positionsAverageHeight) / 2;
+        } else {
+            pageAverageLineHeight = positionsAverageHeight;
         }
 
         List<PdfParagraph> paragraphs = getLastPage().getParagraphs();
@@ -126,15 +142,15 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
 
     private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
         float lastBottomY = lastPosition.getY();
+        float lastTopY = lastPosition.getY() - lastPosition.getHeight();
         float currTopY = currPosition.getY() - currPosition.getHeight();
 
-        // Use min(curr, prev) height in case curr in some large heading, then smaller spacing makes sense as line break factor
-        float lowestCharHeight = Math.min(currPosition.getHeight(), lastPosition.getHeight());
-
         // Use MIN_LINE_HEIGHT to avoid potential very "short" special chars causing breaks.
-        float safeCharHeight = Math.max(lowestCharHeight, MIN_LINE_HEIGHT);
+        float safeAvgLineHeight = Math.max(pageAverageLineHeight, MIN_LINE_HEIGHT);
 
-        return Math.abs(currTopY - lastBottomY) > (2 * safeCharHeight);
+        // 2x avg line height between rows AND 2.5x top to top, to safeguard against low-hanging symbols like ','
+        return Math.abs(currTopY - lastBottomY) > (2 * safeAvgLineHeight)
+                && Math.abs(currTopY - lastTopY) > (2.5 * safeAvgLineHeight) ;
     }
 
     private PdfPage getLastPage() {

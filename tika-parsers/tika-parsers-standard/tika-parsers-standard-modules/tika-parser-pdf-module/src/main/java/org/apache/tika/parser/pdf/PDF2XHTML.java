@@ -291,6 +291,12 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
 
         @Override
+        protected void endPage(PDPage page) throws IOException {
+            super.endPage(page);
+            positionContentHandler.removeEmptyParagraph();
+        }
+
+        @Override
         protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
             positionContentHandler.addPositions(textPositions);
             super.writeString(text);
@@ -318,12 +324,6 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         protected void writeParagraphEnd() throws IOException {
             positionContentHandler.endParagraph();
             super.writeParagraphEnd();
-        }
-
-        @Override
-        protected void endPage(PDPage page) throws IOException {
-            super.endPage(page);
-            positionContentHandler.removeEmptyParagraph();
         }
     }
 
