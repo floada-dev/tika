@@ -1,0 +1,309 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.tika.parser.pdf;
+
+import org.apache.pdfbox.text.TextPosition;
+import org.apache.tika.TikaTest;
+import org.apache.tika.sax.BodyContentHandler;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
+
+    public static Level PDFBOX_LOG_LEVEL = Level.INFO;
+
+    @BeforeAll
+    public static void setup() {
+        //remember default logging level, but turn off for PDFParserTest
+        PDFBOX_LOG_LEVEL = Logger.getLogger("org.apache.pdfbox").getLevel();
+        Logger.getLogger("org.apache.pdfbox").setLevel(Level.OFF);
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        //return to regular logging level
+        Logger.getLogger("org.apache.pdfbox").setLevel(PDFBOX_LOG_LEVEL);
+    }
+
+    @Test
+    public void testPdfParsingWithPositionsSmallDoc() throws Exception {
+        CharacterPositionContentHandler contentHandler = new CharacterPositionContentHandler(new BodyContentHandler(-1));
+        parse("testPDF.pdf", contentHandler);
+        Map<Integer, List<TextPosition>> textPositions = contentHandler.getTextPositions();
+
+        assertEquals(595.0, textPositions.get(1).get(0).getPageWidth());
+        assertEquals(842.0, textPositions.get(1).get(0).getPageHeight());
+
+        assertEquals(1, textPositions.size());
+        assertEquals(1058, textPositions.get(1).size());
+        List<TextPosition> pagePositions = textPositions.get(1);
+        assertTrue(pagePositions.stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+    }
+
+    @Test
+    public void testPdfParsingWithPositionsLargerDoc() throws Exception {
+        CharacterPositionContentHandler contentHandler = new CharacterPositionContentHandler(new BodyContentHandler(-1));
+        parse("distr_agreement_5pg.pdf", contentHandler);
+        Map<Integer, List<TextPosition>> positions = contentHandler.getTextPositions();
+
+        assertEquals(5, positions.size());
+        assertEquals(3165, positions.get(1).size());
+        assertEquals(2504, positions.get(5).size());
+        positions.forEach((pn, tps) -> assertTrue(tps.stream().noneMatch(tp -> tp.getUnicode().isEmpty())));
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsSmallDoc() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("testPDF.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(1, pages.size());
+        PdfPage page = pages.get(0);
+        assertEquals(1, page.getPageNumber());
+        List<PdfParagraph> paragraphs = page.getParagraphs();
+        assertEquals(8, paragraphs.size());
+
+        float width = page.getWidth();
+        float height = page.getHeight();
+        assertEquals(595.0, width);
+        assertEquals(842.0, height);
+        assertEquals(width, paragraphs.get(0).getTextPositions().get(0).getPageWidth());
+        assertEquals(height, paragraphs.get(0).getTextPositions().get(0).getPageHeight());
+
+        paragraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        assertEquals("Apache Tika - Apache Tika http://incubator.apache.org/tika/", paragraphs.get(0).toString());
+        assertEquals("1 of 1 15.9.2007 11:02", paragraphs.get(1).toString());
+        assertEquals("Tika - Content Analysis Toolkit", paragraphs.get(2).toString());
+        // Two long paragraphs which were previously split into multiple paragraphs each
+        assertEquals("Apache Tika is a toolkit for detecting and extracting metadata and structured text content from various documents using existing parser libraries.", paragraphs.get(3).toString());
+        assertEquals("Apache Tika is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Lucene PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.", paragraphs.get(4).toString());
+        assertEquals("See the Apache Tika Incubation Status page for the current incubation status.", paragraphs.get(5).toString());
+        assertEquals("Latest News", paragraphs.get(6).toString());
+        assertEquals("March 22nd, 2007: Apache Tika project started The Apache Tika project was formally started when the Tika proposal was accepted by the Apache Incubator PMC.", paragraphs.get(7).toString());
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsLargerDoc() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("distr_agreement_5pg.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(5, pages.size());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        assertEquals(21, pageOneParagraphs.size());
+        // Some long line breaking paragraphs should remain as single paragraphs
+        assertEquals("Exhibit 10.2", pageOneParagraphs.get(0).toString());
+        assertEquals("IN ACCORDANCE WITH ITEM 601(b) OF REGULATION S-K, CERTAIN IDENTIFIED INFORMATION (THE “CONFIDENTIAL INFORMATION”) HAS BEEN EXCLUDED FROM THIS EXHIBIT BECAUSE IT IS BOTH (I) NOT MATERIAL AND (II) WOULD LIKELY CAUSE COMPETITIVE HARM IF PUBLICLY DISCLOSED. THE CONFIDENTIAL INFORMATION IS DENOTED HEREIN BY [*****].", pageOneParagraphs.get(1).toString());
+        assertEquals("ZEBRA® PARTNERCONNECT PROGRAM", pageOneParagraphs.get(2).toString());
+        assertEquals("ADDENDUM TO", pageOneParagraphs.get(3).toString());
+        assertEquals("ZEBRA® PARTNERCONNECT DISTRIBUTOR AGREEMENT", pageOneParagraphs.get(4).toString());
+        assertEquals("THIS ADDENDUM (“Addendum”) is made on the 4th day of February 2019 (“Effective Date”) between the following parties: Zebra Technologies International, LLC, with an office at 3 Overlook Point, Lincolnshire IL 60069 (“Zebra”);", pageOneParagraphs.get(5).toString());
+        // '-' could be lower in height so make sure we don't split on that
+        assertEquals("Zebra Technologies do Brasil - Comércio de Produtos de Informåtica Ltda., a company incorporated and organized under the laws of Brazil, with offices at Av. Magalhäes de Castro, 4800, sala 72-A, Cidade Jardim, CEP 05676-120, Säo Paulo, sp (\"Zebra Brazil\")", pageOneParagraphs.get(6).toString());
+        assertEquals("Xplore Technologies Corporation of America, a company with its principal place of business at 8601 RR 2222, Building 2, Suite #100, Austin, Texas 78730, U.S.A. (“Xplore”);", pageOneParagraphs.get(7).toString());
+        assertEquals("(collectively \"Zebra\")", pageOneParagraphs.get(8).toString());
+        assertEquals("AND", pageOneParagraphs.get(9).toString());
+        assertEquals("ScanSource, Inc., a company incorporated in South Carolina, with its registered office at 6 Logue Court, Greenville, South Carolina 29615 (\"ScanSource\").", pageOneParagraphs.get(10).toString());
+        assertEquals("ScanSource Latin America, Inc. a ScanSource Affiliate incorporated in Florida, whose registered business address is 1935 NW 87 Avenue, Miami, Florida 33172 (\"ScanSource Latin America\")", pageOneParagraphs.get(11).toString());
+        assertEquals("ScanSource Brazil Distribuidora de Technologias, Ltda., a ScanSource Affiliate incorporated and organized under the laws of Brazil, with offices in the City of Säo José dos Pinhais, State of Paranå, at Avenida Rui Barbosa, 2529, Modulos 11 and 12, Bairro Jardim Ipé, CEP: 83055-320, enrolled with the Taxpayer Register (CNPJ/MF) under No. 05.607.657/0001-35 (\"ScanSource Brazil\")", pageOneParagraphs.get(12).toString());
+        assertEquals("SCANSOURCE DE MEXICO S. DE R.L. DE C.V., a ScanSource Affiliate incorporated in Mexico, whose registered business address is Calle 4 No. 298, Colonia Franccionamiento Industrial Alce Blanco, Naucalpan de Juarez, Estado de México 53370 (\"ScanSource Mexico\")", pageOneParagraphs.get(13).toString());
+        assertEquals("(Collectively \"Distributor')", pageOneParagraphs.get(14).toString());
+        assertEquals("\"Zebra\" and the \"Distributor\" are referred to collectively as 'Parties\" and individually as a \"Party\".", pageOneParagraphs.get(15).toString());
+        assertEquals("WHEREAS: (A) On February 12, 2014 the Parties entered into an agreement that was renamed, as of April 11, 2016, to: PartnerConnectTM EVM Distribution Agreement, (as amended) (\"Distribution Agreement\"), which relates to Zebra Enterprise Visibility and Mobility ('EVM\") products and services, and which, as acknowledged by the Parties by entering into this Amendment, is in full force and effect and valid as when this Amendment is executed;", pageOneParagraphs.get(16).toString());
+        assertEquals("(B) Distributor purchases Products from Zebra under the Distributor Agreement;", pageOneParagraphs.get(17).toString());
+        assertEquals("(C)\u200B Zebra has recently completed the acquisition of Xplore, which transaction closed on August 14, 2018;", pageOneParagraphs.get(18).toString());
+        assertEquals("(D) Zebra has expanded its products portfolio by adding the product families listed in Exhibit A, that as of the Effective Date hereof are branded Xplore or Motion Computing, thereto (“Xplore Products”); (E) Xplore, now a Zebra Affiliate, is the seller of Xplore Products;", pageOneParagraphs.get(19).toString());
+        assertEquals("Source: SCANSOURCE, INC., 10-Q, 5/9/2019", pageOneParagraphs.get(20).toString());
+
+        assertEquals(13, pages.get(1).getParagraphs().size());
+        assertEquals("(F) Xplore wishes to sell Xplore Products to Distributor and Distributor wishes to purchase such products from Xplore pursuant to the terms and conditions of the Distributor Agreement by entering into this Addendum; and", pages.get(1).getParagraphs().get(0).toString());
+
+        assertEquals(8, pages.get(2).getParagraphs().size());
+        assertEquals("IN WITNESS HEREOF, the Parties have executed this Addendum on the dates specified herein.", pages.get(2).getParagraphs().get(0).toString());
+
+        assertEquals(10, pages.get(3).getParagraphs().size());
+
+        List<PdfParagraph> lastPageParagraphs = pages.get(4).getParagraphs();
+        assertEquals(7, lastPageParagraphs.size());
+        assertEquals("4. Stock on Hand. Distributor shall use commercially reasonable efforts to maintain thirty (30) days of stock in Distributor’s inventory to support sales. Xplore acknowledges that from time to time, Distributor’s inventory levels may fall below the thirty (30) days goal that is agreed upon by both Parties. If inventory levels fall below the thirty (30) day goal for more than sixty (60) consecutive days, Xplore, upon written notice to Distributor, shall replenish the stock to an amount agreed by both Parties.", lastPageParagraphs.get(0).toString());
+        assertEquals("5. Product Return and Stock Rotation. The terms of Section 3 of Schedule 2 of the Distribution Agreement will apply to Xplore Products, provided however that stock rotation allowance for Xplore Products will be based on the net dollar value of Distributor’s purchases in each calendar quarter of Xplore Products and such allowance will be calculated separate and apart from all other Products purchased by Distributor during such period.", lastPageParagraphs.get(1).toString());
+        assertEquals("ARTICLE II. DELIVERY OF PRODUCTS", lastPageParagraphs.get(2).toString());
+        assertEquals("1. Shipping Terms. Notwithstanding anything to the contrary contained in the Distribution Agreement, and unless notified by Xplore otherwise, shipping terms for Xplore Products will be Delivery Duty Paid (DDP) INCOTERMS® 2010, whereby Distributor’s price, includes all costs of delivery, insurance, import and / or export duties and tariffs. Such prices are exclusive of all federal, state, municipal or other government excise, sales, use, occupational or like taxes in force, and any such taxes shall be assumed and paid for by Distributor in addition to its payment for the Xplore Products. Title and risk of loss to Xplore Products shall pass to Distributor upon delivery to Distributor, as indicated in the Proof of Delivery (PoD) documents. [*****]", lastPageParagraphs.get(3).toString());
+        assertEquals("1. At Distributor’s request, Xplore may deliver Xplore Products directly to Program Members or their respective End Users on behalf of Distributor, and in such instances title and risk of loss will pass to Distributor upon delivery to the applicable recipients, as indicated on the PoD documents. Some exclusions may apply, including countries not served by Xplore shipping and importing methods, and/or countries where Xplore Products, are not certified for resale and/or use.", lastPageParagraphs.get(4).toString());
+        assertEquals("1. Proof of Delivery (“POD”). Xplore shall provide to Distributor, at no charge, a means for confirming proof of delivery for Xplore Product shipments when requested by Distributor. Xplore shall provide packing slips for all shipments.", lastPageParagraphs.get(5).toString());
+        assertEquals("Source: SCANSOURCE, INC., 10-Q, 5/9/2019", lastPageParagraphs.get(6).toString());
+    }
+
+    @Test
+    @Disabled("How should we deal with this... ? Impossible to get 'line height', can just get text height")
+    public void testPdfParsingWithParagraphPositionsLargeLineHeightDoc() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("msa_indemnification.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(28, pages.size());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        assertEquals(6, pageOneParagraphs.size());
+        assertEquals("INDEMNIFICATION AGREEMENT", pageOneParagraphs.get(0).toString());
+        assertEquals("This Master Service Agreement (the â€œMSAâ€�) is entered into between COMPANY A, LLC (â€œCOMPANY Aâ€�), a Georgia limited liability corporation, and PDX COMPANY INC______________________ (â€œClientâ€� or â€œyouâ€�).", pageOneParagraphs.get(1).toString());
+        assertEquals("THIS AGREEMENT is dated for reference this 21st day of October, 2003.", pageOneParagraphs.get(2).toString());
+        assertEquals("ï»¿Unless otherwise agreed by the parties in writing, Products and Services acquired by XX under this EMA are solely for XX's and its Aﬃliates\\\" own internal use and not for resale or sub-licensing, e. XX may not assign, delegate or otherwise transfer all or any part of this EMA without prior consent from <COMPANY>.", pageOneParagraphs.get(3).toString());
+        assertEquals("If Licensor advises Licensee to remove its facilities, and Licensee refuses to do so, Licensor may remove the facilities and charge the cost and expense of removal to Licensee or deduct the costs and expenses from monies due Licensee under this Agreement, individual Site Licenses or any other agreements. Licensor, in its sole discretion, may allow some or all of Licensee&rsquo;s equipment to remain on Licensor&rsquo;s property. If no such monies are owed, Licensor may invoke any remedies provided herein or at law or equity to recover all monies owed. Except as otherwise provided herein, the fee for use of a Site terminated before the end of the term for that Site License shall not terminate until the later of (1) the effective date of the early termination or (2) the date on which Licensee has removed its equipment and restored the Site in accordance with Section 12(a) or (3) the date on which Licensor notifies Licensee of its election to exercise its option to accept transfer of Licensee's facilities.", pageOneParagraphs.get(4).toString());
+        assertEquals("14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, officers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€TM fees, expertâ€TMs fees and settlement costs) arising out of any.", pageOneParagraphs.get(5).toString());
+
+        assertEquals(3, pages.get(3).getParagraphs().size());
+    }
+
+    @Test
+    public void testPdfParsingWithParagraphPositionsConvertedDocxToPdf() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("converted_msa_indemn.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(20, pages.size());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        assertEquals(8, pageOneParagraphs.size());
+        assertEquals("INDEMNIFICATION AGREEMENT", pageOneParagraphs.get(0).toString());
+        assertEquals("This Master Service Agreement (the â€œMSAâ€) is entered into between COMPANY A, LLC (â€œCOMPANY Aâ€), a Georgia limited liability corporation, and PDX COMPANY INC______________________ (â€œClientâ€ or â€œyouâ€).", pageOneParagraphs.get(1).toString());
+        assertEquals("THIS AGREEMENT is dated for reference this 21st day of October, 2003.", pageOneParagraphs.get(2).toString());
+        assertEquals("ï»¿Unless otherwise agreed by the parties in writing, Products and Services acquired by XX under this EMA are solely for XX's and its Affiliates\\\" own internal use and not for resale or sub-licensing, e. XX may not assign, delegate or otherwise transfer all or any part of this EMA without prior consent from <COMPANY>.", pageOneParagraphs.get(3).toString());
+        assertEquals("If Licensor advises Licensee to remove its facilities, and Licensee refuses to do so, Licensor may remove the facilities and charge the cost and expense of removal to Licensee or deduct the costs and expenses from monies due Licensee under this Agreement, individual Site Licenses or any other agreements. Licensor, in its sole discretion, may allow some or all of Licensee&rsquo;s equipment to remain on Licensor&rsquo;s property. If no such monies are owed, Licensor may invoke any remedies provided herein or at law or equity to recover all monies owed. Except as otherwise provided herein, the fee for use of a Site terminated before the end of the term for that Site License shall not terminate until the later of (1) the effective date of the early termination or (2) the date on which Licensee has removed its equipment and restored the Site in accordance with Section 12(a) or (3) the date on which Licensor notifies Licensee of its election to exercise its option to accept transfer of Licensee's facilities.", pageOneParagraphs.get(4).toString());
+        assertEquals("14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, officers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€™ fees, expertâ€™s fees and settlement costs) arising out of any.", pageOneParagraphs.get(5).toString());
+        assertEquals("22.8 B. All Orders shall be paid within 30 days of the date of invoice. If payment is not received by ABAXIS within said 30 days, the payment shall bear a late payment charge equal to 1.5% per month (or partial month) that the payment is delayed.", pageOneParagraphs.get(6).toString());
+        assertEquals("23.6 Term: The term of this Agreement shall commence on the date first written above and shall continue until March 31, 2006, provided that Publisher shall have the option, via notice to Atari no later than February 15, 2006, to extend the term for an additional one-year period, through March 31, 2007, on the same terms and conditions (the \"TERM\"). The Term may be extended for one or more additional one (1) year periods via a mutually executed amendment to this Agreement. The three (3) month sell-off period shall commence as of the earlier expiration of this Agreement or upon notice of termination. Upon", pageOneParagraphs.get(7).toString());
+
+        List<PdfParagraph> pageTwoParagraphs = pages.get(1).getParagraphs();
+        assertEquals(6, pageTwoParagraphs.size());
+        assertEquals("14.58 By DIRECTV. DIRECTV shall indemnify and hold harmless each of Programmer, its Affiliated Companies, Programmer's contractors, subcontractors and authorized distributors, each supplier to Programmer of any portion of the Services hereunder and each participant therein and the directors, officers, employees and agents of Programmer, such Affiliated Companies, such contractors, subcontractors and distributors and such suppliers and participants therein (collectively, the \"Programmer Indemnitees\") from, against and with respect to any and all claims, damages, liabilities, costs and expenses (including reasonable attorneys' and experts' fees) incurred in connection with any third party claim (including, without limitation, a claim by any Governmental Authority) against the Programmer Indemnitees arising out of (i) DIRECTV's breach or alleged breach of any provision of this Agreement, (ii) the distribution by DIRECTV of the Services (except with respect to claims relating to the content of the Services for which Programmer is solely responsible pursuant to Section 8.1(ii) and Section 8.1(iii)), (iii) DIRECTV's advertising and marketing of the Services (except with respect to such advertising and marketing materials or content supplied or approved by Programmer), and (iv) any other materials, including advertising or promotional copy, supplied by DIRECTV. In addition, DIRECTV shall pay and hold Programmer harmless from any federal, state, or local taxes or fees, including any fees payable to local franchising authorities, which are based upon revenues derived by, or the operations of, DIRECTV.", pageTwoParagraphs.get(0).toString());
+        assertEquals("25. RightToAssign", pageTwoParagraphs.get(1).toString());
+        assertEquals("28.12 Termination by Emergent without Cause. Notwithstanding anything contained herein to the contrary, Emergent shall have the right to terminate this Agreement in its entirety or with respect to one or more countries in the Territory at any time in its sole discretion by giving one hundred and eighty (180) daysâ€™ written notice to Supplier.", pageTwoParagraphs.get(2).toString());
+        assertEquals("14.36 (c) The relevant Borrower shall indemnify the Administrative Agent and each Lender, within 10 days after written demand therefor, for the full amount of any Indemnified Taxes or Other Taxes paid by the Administrative Agent or such Lender, as the case may be, on or with respect to any payment by or on account of any obligation of any Borrower hereunder (including Indemnified Taxes or Other Taxes imposed or asserted on or attributable to amounts payable under this Section), and any penalties, interest and reasonable expenses arising therefrom or with respect thereto, whether or not such Indemnified Taxes or Other Taxes were correctly or legally imposed or asserted by the relevant Governmental Authority. A certificate as to the amount of such payment or liability delivered to the Company by a Lender, or by the Administrative Agent on its own behalf or on behalf of a Lender, shall be conclusive absent manifest error.", pageTwoParagraphs.get(3).toString());
+        assertEquals("14.10 Except to the extent caused by the negligence of willful misconduct of Tenant Parties, Landlord shall indemnify and hold Tenant harmless from and against any and all claims or liability for any injury or damage to any person or property including any reasonable attorney's fees (but excluding any consequential damages or loss of business) occurring in, on, or about the Project to the extent such injury or damage is caused by the negligence or willful misconduct of Landlord, its employees, its property manager, or its property manager's employees; provided, however, that the foregoing indemnity shall not include claims or liability to the extent waived by Tenant pursuant to Paragraph 10(b) below. Further, (1) in the event of a discrepancy between the terms of this Paragraph and the terms of Paragraph 39 of this Lease concerning Hazardous Substances liability, the latter shall control; and (2) nothing in this Paragraph 10(a) is intended to nor shall it be deemed to override the provisions of Paragraph 11.", pageTwoParagraphs.get(4).toString());
+        assertEquals("9. DutyToReturn", pageTwoParagraphs.get(5).toString());
+
+        assertEquals(6, pages.get(2).getParagraphs().size());
+
+        List<PdfParagraph> pageFourParagraphs = pages.get(3).getParagraphs();
+        assertEquals(7, pageFourParagraphs.size());
+        assertEquals("25.1 Assignments. This Agreement shall be freely assignable by Company to and shall inure to the benefit of, and be binding upon, Company, its successors and assigns and/or any other entity which shall succeed to the business presently being conducted by Company. Being a contract for personal services, neither this Agreement nor any rights hereunder shall be assigned by Employee.", pageFourParagraphs.get(0).toString());
+        assertEquals("5.28 Neither this Agreement nor any of the parties' rights hereunder shall be assignable by any party hereto without the prior written consent of the other party hereto.", pageFourParagraphs.get(1).toString());
+        assertEquals("WHEREAS Licensor may seek to provide the traveling public with wireless telephone access to traffic information lines. If Licensor does so, Licensee shall cooperate in developing a program to provide the traveling public with wireless telephone access to information lines, and to create an emergency access line subject to Licensee's operational capacity; NOW THEREFORE, in consideration of the mutual covenants and benefits stated herein, and in further consideration of the obligations, terms and considerations hereinafter set forth and recited; Licensor and Licensee agree as follows:", pageFourParagraphs.get(2).toString());
+        assertEquals("15.2 CONSEQUENTIAL DAMAGES WAIVER. IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY INCIDENTAL OR CONSEQUENTIAL LOSSES OR DAMAGES (INCLUDING, BUT NOT LIMITED TO ECONOMIC LOSS OR LOSS OF PROFITS BY HEINZ) SUFFERED OR INCURRED AS A RESULT OF OR IN CONNECTION WITH ANY BREACH OF THIS AGREEMENT OR ANY TORT (INCLUDING, BUT NOT LIMITED TO, STRICT LIABILITY OR NEGLIGENCE) COMMITTED BY A PARTY IN CONNECTION WITH THIS AGREEMENT.", pageFourParagraphs.get(3).toString());
+        assertEquals("15.3 NO LIABILITY FOR CERTAIN DAMAGES. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, NEITHER PARTY NOR THEIR AFFILIATES, SUPPLIERS OR CONTRACTORS WILL BE LIABLE FOR ANY INDIRECT DAMAGES (INCLUDING WITHOUT LIMITATION, CONSEQUENTIAL, SPECIAL, OR INCIDENTAL DAMAGES, DAMAGES FOR LOSS OF PROFITS OR REVENUES, BUSINESS INTERRUPTION, OR LOSS OF BUSINESS INFORMATION), ARISING IN CONNECTION WITH THIS AGREEMENT, ANY STATEMENT OF SERVICES, SERVICES, SERVICE DELIVERABLES, FIXES, PRODUCTS, OR ANY OTHER MATERIALS OR INFORMATION, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES OR IF SUCH POSSIBILITY WAS REASONABLY FORESEEABLE. THIS EXCLUSION OF LIABILITY DOES NOT APPLY TO EITHER PARTY'S LIABILITY TO THE OTHER FOR VIOLATION OF ITS CONFIDENTIALITY OBLIGATION, REDISTRIBUTION OR OF THE OTHER PARTY'S INTELLECTUAL PROPERTY RIGHTS.", pageFourParagraphs.get(4).toString());
+        assertEquals("4.3 The Option Agreement will provide that the subject options will vest in the event of a Change in Control or a Public Offering (as such terms are defined in the Option Agreement).", pageFourParagraphs.get(5).toString());
+        assertEquals("23.5 Term. The Term of this Agreement shall extend for three years from the Effective Date, unless terminated earlier as permitted in this Section 5 below. The Term may be renewed as mutually agreed to by the parties.", pageFourParagraphs.get(6).toString());
+
+        assertEquals(6, pages.get(4).getParagraphs().size());
+        assertEquals(6, pages.get(5).getParagraphs().size());
+    }
+
+    @Test
+    public void testPdfParsingWithNormalParagraphSplitPdf() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("SLA_Pear.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        assertEquals(7, pages.size());
+        assertEquals(7, pages.get(6).getPageNumber());
+        PdfPage pageOne = pages.get(0);
+        assertEquals(1, pageOne.getPageNumber());
+        List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
+
+        pageOneParagraphs.forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+            assertFalse(para.toString().contains("\n"));
+            assertFalse(para.toString().endsWith(" "));
+        });
+
+        assertEquals(13, pageOneParagraphs.size());
+        assertEquals("EXHIBIT 10.18", pageOneParagraphs.get(0).toString());
+        assertEquals("SOFTWARE LICENSE AGREEMENT", pageOneParagraphs.get(1).toString());
+        assertEquals("THIS SOFTWARE LICENSE AGREEMENT (the “\u200BAgreement\u200B”) is made as of December 9, 2014 (the “\u200BEffective Date\u200B”) by and between Pear Therapeutics, Inc. (“\u200BPear\u200B”), a Delaware corporation having its principal place of business at 55 Temple Place, Floor 3, Boston MA 02111, and Behavioural Neurological Applications and Solutions Inc. (“\u200BLicensor\u200B”), having his principal place of business at 100 College Street, Suite 213, Toronto, ON M5G 1L5.", pageOneParagraphs.get(2).toString());
+        assertEquals("WHEREAS Licensor owns and operates a suite of software applications called Megateam, which are software solutions for treating mental health conditions including ADHD (i.e., the Applications);", pageOneParagraphs.get(3).toString());
+        assertEquals("2.1.1 \u200BCreate Combination Products\u200B: to combine and package the Licensor Products with pharmaceutical", pageOneParagraphs.get(12).toString());
+
+        assertEquals(10, pages.get(1).getParagraphs().size());
+
+        List<PdfParagraph> pageThreeParagraphs = pages.get(2).getParagraphs();
+        assertEquals(11, pageThreeParagraphs.size());
+        assertEquals("Products in connection with the creation of Combination Products), and non-exclusive with respect to all other rights granted to Pear in the Licensor Products under Section 2.1. In addition, all of the foregoing rights granted under Section 2.1 will be permissive but not obligatory; meaning that (unless otherwise expressly set forth in the Agreement to the contrary) Pear will not be under any obligation to use the Licensor Products and/or the Content in any manner whatsoever unless it so chooses.", pageThreeParagraphs.get(0).toString());
+        assertEquals("2.2 \u200BRestrictions\u200B. Except as expressly permitted in this Agreement, Pear will not (and will not permit third parties to):", pageThreeParagraphs.get(1).toString());
+        assertEquals("(a) (except as necessary to exercise the rights set forth in Section 2.1, above) distribute, rent, or otherwise transfer any rights in the Licensor Products;", pageThreeParagraphs.get(2).toString());
+        assertEquals("(b) except as necessary in the creation of Integrated Products, or pursuant to Section 3.17, modify the Applications. In addition, changes to the Integrated Products that involve further modifications of any customized version of the Applications provided by Licensor will be subject to mutual agreement of the parties, including around the reasonable costs involved to make any such changes;", pageThreeParagraphs.get(3).toString());
+        assertEquals("(c) except as permitted by applicable law, reverse engineer, decrypt, decompile, or disassemble the Licensor Products; or", pageThreeParagraphs.get(4).toString());
+        assertEquals("(d) use the Licensor Products in any manner or for any purpose not authorized or contemplated by this", pageThreeParagraphs.get(5).toString());
+        assertEquals("Agreement.", pageThreeParagraphs.get(6).toString());
+        assertEquals("2.3 \u200BLimitations on License\u200B. Notwithstanding the foregoing, if Pear does not secure the rights to sell Acceptable Drugs in conjunction with the Combination Products, the license granted pursuant to Section 2.1.2(a) will revert to a non-exclusive license.", pageThreeParagraphs.get(7).toString());
+        assertEquals("2", pageThreeParagraphs.get(8).toString());
+        assertEquals("3. RESPONSIBILITIES OF THE PARTIES.", pageThreeParagraphs.get(9).toString());
+        assertEquals("3.1 \u200BResponsibilities of Licensor\u200B. Licensor will have primary responsibility for performing the following tasks and providing the following services:", pageThreeParagraphs.get(10).toString());
+
+        assertEquals(8, pages.get(3).getParagraphs().size());
+        assertEquals(8, pages.get(4).getParagraphs().size());
+        assertEquals(8, pages.get(5).getParagraphs().size());
+        assertEquals(4, pages.get(6).getParagraphs().size());
+    }
+}
