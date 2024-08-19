@@ -84,6 +84,8 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     private List<PdfParagraph> buildParagraphs(float minLineSpacing) {
+        if (pageTextLines.isEmpty()) return new ArrayList<>();
+
         List<PdfParagraph> paragraphs = new ArrayList<>();
 
         List<TextPosition> paragraphTextPositions = new ArrayList<>(pageTextLines.get(0).textPositions);
