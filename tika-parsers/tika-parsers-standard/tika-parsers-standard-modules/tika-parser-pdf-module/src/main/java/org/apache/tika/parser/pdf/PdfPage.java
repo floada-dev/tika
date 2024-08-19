@@ -1,6 +1,5 @@
 package org.apache.tika.parser.pdf;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PdfPage {
@@ -8,12 +7,13 @@ public class PdfPage {
     private final int pageNumber;
     private final float width;
     private final float height;
-    private final List<PdfParagraph> paragraphs = new ArrayList<>();
+    private final List<PdfParagraph> paragraphs;
 
-    PdfPage(int pageNumber, float width, float height) {
+    PdfPage(int pageNumber, float width, float height, List<PdfParagraph> paragraphs) {
         this.pageNumber = pageNumber;
         this.width = width;
         this.height = height;
+        this.paragraphs = paragraphs;
     }
 
     public int getPageNumber() {
@@ -26,17 +26,6 @@ public class PdfPage {
 
     public float getHeight() {
         return height;
-    }
-
-    public void addParagraph() {
-        if (paragraphs.isEmpty() || !getLastParagraph().getTextPositions().isEmpty()) {
-            PdfParagraph paragraph = new PdfParagraph();
-            paragraphs.add(paragraph);
-        }
-    }
-
-    public PdfParagraph getLastParagraph() {
-        return paragraphs.get(paragraphs.size() - 1);
     }
 
     public List<PdfParagraph> getParagraphs() {

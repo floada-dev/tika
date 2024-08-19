@@ -284,16 +284,10 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
 
         @Override
-        protected void startPage(PDPage page) throws IOException {
-            PDRectangle pageBox = page.getCropBox();
-            positionContentHandler.nextPage(pageBox.getWidth(), pageBox.getHeight());
-            super.startPage(page);
-        }
-
-        @Override
         protected void endPage(PDPage page) throws IOException {
             super.endPage(page);
-            positionContentHandler.removeEmptyParagraph();
+            PDRectangle pageBox = page.getCropBox();
+            positionContentHandler.endPage(pageBox.getWidth(), pageBox.getHeight());
         }
 
         @Override
