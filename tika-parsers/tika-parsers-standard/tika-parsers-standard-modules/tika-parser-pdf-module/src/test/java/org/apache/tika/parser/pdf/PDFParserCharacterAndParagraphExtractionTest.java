@@ -388,4 +388,15 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals("PAGE 129", lastPageParagraphs.get(lastPageParagraphs.size() - 1).toString());
         assertEquals("*** This redacted material has been omitted pursuant to a request for confidential treatment, and the material has been filed separately with the Commission.", lastPageParagraphs.get(lastPageParagraphs.size() - 2).toString());
     }
+
+    @Test
+    public void testScannedPdfShouldReturnEmptyPagesOnly() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("EMPTY - Jos A Bank Amendment.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+        assertEquals(3, pages.size());
+        pages.forEach(page -> {
+            assertEquals(0, page.getParagraphs().size());
+        });
+    }
 }
