@@ -20,6 +20,7 @@ import org.apache.pdfbox.text.TextPosition;
 import org.xml.sax.ContentHandler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
@@ -84,11 +85,15 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     private List<PdfParagraph> buildParagraphs(float minLineSpacing) {
-        if (pageTextLines.isEmpty()) return new ArrayList<>();
+        if (pageTextLines.isEmpty()) {
+            return new ArrayList<>();
+        } else if (pageTextLines.size() == 1) {
+            return new ArrayList<>(Collections.singletonList(new PdfParagraph(pageTextLines.get(0).textPositions)));
+        }
 
         List<PdfParagraph> paragraphs = new ArrayList<>();
-
         List<TextPosition> paragraphTextPositions = new ArrayList<>(pageTextLines.get(0).textPositions);
+
         for (int i = 1; i < pageTextLines.size(); i++) {
             TextLine currLine = pageTextLines.get(i);
             TextLine lastLine = pageTextLines.get(i - 1);
