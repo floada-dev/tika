@@ -21,14 +21,13 @@ import org.xml.sax.ContentHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
 
-    private static final float MIN_LINE_HEIGHT = 4.0f;
-    private float pageAverageLineHeight = 0f;
-
     private final List<PdfPage> pages = new ArrayList<>();
+    private final List<TextLine> pageTextLines = new ArrayList<>();
 
     public ParagraphAwarePositionContentHandler(ContentHandler contentHandler) {
         super(contentHandler);
@@ -39,121 +38,101 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     @Override
-    void nextPage(float width, float height) {
-        int pageNumber = pages.size();
-        PdfPage page = new PdfPage(++pageNumber, width, height);
-        pages.add(page);
+    void endPage(float width, float height) {
+        float minLineSpacing = findMinLineSpacing();
+        List<PdfParagraph> paragraphs = buildParagraphs(minLineSpacing);
 
-        // Reset average line height per page
-        pageAverageLineHeight = 0f;
-    }
+        int pageNumber = pages.size() + 1;
+        PdfPage pdfPage = new PdfPage(pageNumber, width, height, paragraphs);
 
-    @Override
-    void nextParagraph() {
-        getLastPage().addParagraph();
-    }
-
-    @Override
-    void removeEmptyParagraph() {
-        PdfPage lastPage = getLastPage();
-        List<TextPosition> lastParagraphTextPositions = lastPage.getLastParagraph().getTextPositions();
-        if (lastParagraphTextPositions.isEmpty()) {
-            List<PdfParagraph> lastPageParagraphs = lastPage.getParagraphs();
-            lastPageParagraphs.remove(lastPageParagraphs.size() - 1);
-        }
+        pages.add(pdfPage);
+        pageTextLines.clear();
     }
 
     @Override
     List<TextPosition> getLastTextPositions() {
-        return getLastPage().getLastParagraph().getTextPositions();
+        return pageTextLines.get(pageTextLines.size() - 1).textPositions;
     }
 
     @Override
     void addPositions(List<TextPosition> positions) {
-        // Trim string (last position)
-        if (positions.get(positions.size() - 1).getUnicode().isBlank()) {
-            positions.remove(positions.size() - 1);
+        // Trim whitespace from start and end string (last position)
+        ListIterator<TextPosition> positionStartIterator = positions.listIterator();
+        while (positionStartIterator.hasNext() && positionStartIterator.next().getUnicode().isBlank()) {
+            positionStartIterator.remove();
+        }
+        ListIterator<TextPosition> positionEndIterator = positions.listIterator(positions.size());
+        while (positionEndIterator.hasPrevious() && positionEndIterator.previous().getUnicode().isBlank()) {
+            positionEndIterator.remove();
         }
 
+        // Do not add blank lines
         if (positions.stream().allMatch(p -> p.getUnicode().isBlank())) {
             return;
         }
 
-        float positionsAverageHeight = positions.stream()
-                .map(TextPosition::getHeight)
-                .collect(Collectors.averagingDouble(h -> h))
-                .floatValue();
-
-        if (pageAverageLineHeight > 0) {
-            pageAverageLineHeight = (pageAverageLineHeight + positionsAverageHeight) / 2;
-        } else {
-            pageAverageLineHeight = positionsAverageHeight;
+        float lineTopYSum = 0.0f;
+        float lineBottomYSum = 0.0f;
+        for (TextPosition position : positions) {
+            lineTopYSum += position.getY() - position.getHeight();
+            lineBottomYSum += position.getY();
         }
+        float avgLineTopY = lineTopYSum / positions.size();
+        float avgLineBottomY = lineBottomYSum / positions.size();
 
-        List<PdfParagraph> paragraphs = getLastPage().getParagraphs();
-        List<TextPosition> lastTextPositions = getLastTextPositions();
+        pageTextLines.add(new TextLine(avgLineTopY, avgLineBottomY, positions));
+    }
 
-        // First text positions of a new paragraph (as identified by tika
-        if (paragraphs.size() > 1 && lastTextPositions.isEmpty()) {
-            boolean mergedAndAdded = maybeMergeParagraphs(paragraphs, positions);
-            if (mergedAndAdded) {
-                return;
+    private List<PdfParagraph> buildParagraphs(float minLineSpacing) {
+        List<PdfParagraph> paragraphs = new ArrayList<>();
+
+        List<TextPosition> paragraphTextPositions = new ArrayList<>(pageTextLines.get(0).textPositions);
+        for (int i = 1; i < pageTextLines.size(); i++) {
+            TextLine currLine = pageTextLines.get(i);
+            TextLine lastLine = pageTextLines.get(i - 1);
+            // 1.5 * minLineSpacing with 10% leeway
+            if (Math.abs(currLine.topY - lastLine.bottomY) > 1.65 * minLineSpacing) {
+                paragraphs.add(new PdfParagraph(new ArrayList<>(paragraphTextPositions)));
+                paragraphTextPositions.clear();
             }
-        } else if (!paragraphs.isEmpty() && !lastTextPositions.isEmpty()) {
-            boolean splitAndAdded = maybeSplitParagraph(lastTextPositions, positions);
-            if (splitAndAdded) {
-                return;
+
+            addWhitespaceTo(paragraphTextPositions);
+            paragraphTextPositions.addAll(currLine.textPositions);
+        }
+
+        paragraphs.add(new PdfParagraph(new ArrayList<>(paragraphTextPositions)));
+
+        return paragraphs;
+    }
+
+    private float findMinLineSpacing() {
+        float minLineSpacing = Float.MAX_VALUE;
+        for (int i = 0; i < pageTextLines.size() - 1; i++) {
+            TextLine curr = pageTextLines.get(i);
+            TextLine next = pageTextLines.get(i + 1);
+            float lineSpacing = next.topY - curr.bottomY;
+            // Negative line spacing means we found "two lines on the same Y coordinates"
+            if (lineSpacing > 0) {
+                minLineSpacing = Math.min(minLineSpacing, lineSpacing);
             }
         }
-
-        addWhitespace();
-        lastTextPositions.addAll(positions);
+        return minLineSpacing;
     }
 
-    private boolean maybeMergeParagraphs(List<PdfParagraph> paragraphs, List<TextPosition> currPositions) {
-        PdfParagraph lastNonEmptyParagraph = paragraphs.get(paragraphs.size() - 2);
-        List<TextPosition> lastNonEmptyParagraphPositions = lastNonEmptyParagraph.getTextPositions();
-        TextPosition lastPosition = lastNonEmptyParagraphPositions.get(lastNonEmptyParagraphPositions.size() - 1);
+    static class TextLine {
+        private final float topY;
+        private final float bottomY;
+        private final List<TextPosition> textPositions;
 
-        // Force paragraph merge if the perceived paragraphs are too close to each other.
-        // Almost certainly just a line break with maybe larger spacing. Min space for paragraph break: 2 x height of text
-        if (!lastAndCurrDistanceExceedThreshold(lastPosition, currPositions.get(0))) {
-            paragraphs.remove(paragraphs.size() - 1);
-            addWhitespace();
-            lastNonEmptyParagraph.getTextPositions().addAll(currPositions);
-            return true;
+        TextLine(float topY, float bottomY, List<TextPosition> textPositions) {
+            this.topY = topY;
+            this.bottomY = bottomY;
+            this.textPositions = textPositions;
         }
 
-        return false;
-    }
-
-    private boolean maybeSplitParagraph(List<TextPosition> lastPositions, List<TextPosition> currPositions) {
-        TextPosition lastPosition = lastPositions.get(lastPositions.size() - 1);
-
-        // Force paragraph split when lines are too far from each other.
-        if (lastAndCurrDistanceExceedThreshold(lastPosition, currPositions.get(0))) {
-            nextParagraph();
-            addPositions(currPositions);
-            return true;
+        @Override
+        public String toString() {
+            return textPositions.stream().map(TextPosition::getUnicode).collect(Collectors.joining(""));
         }
-
-        return false;
-    }
-
-    private boolean lastAndCurrDistanceExceedThreshold(TextPosition lastPosition, TextPosition currPosition) {
-        float lastBottomY = lastPosition.getY();
-        float lastTopY = lastPosition.getY() - lastPosition.getHeight();
-        float currTopY = currPosition.getY() - currPosition.getHeight();
-
-        // Use MIN_LINE_HEIGHT to avoid potential very "short" special chars causing breaks.
-        float safeAvgLineHeight = Math.max(pageAverageLineHeight, MIN_LINE_HEIGHT);
-
-        // 2x avg line height between rows AND 2.5x top to top, to safeguard against low-hanging symbols like ','
-        return Math.abs(currTopY - lastBottomY) > (2 * safeAvgLineHeight)
-                && Math.abs(currTopY - lastTopY) > (2.5 * safeAvgLineHeight) ;
-    }
-
-    private PdfPage getLastPage() {
-        return pages.get(pages.size() - 1);
     }
 }

@@ -160,10 +160,10 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(13, pages.get(1).getParagraphs().size());
         assertEquals("(F) Xplore wishes to sell Xplore Products to Distributor and Distributor wishes to purchase such products from Xplore pursuant to the terms and conditions of the Distributor Agreement by entering into this Addendum; and", pages.get(1).getParagraphs().get(0).toString());
 
-        assertEquals(8, pages.get(2).getParagraphs().size());
+        assertEquals(9, pages.get(2).getParagraphs().size());
         assertEquals("IN WITNESS HEREOF, the Parties have executed this Addendum on the dates specified herein.", pages.get(2).getParagraphs().get(0).toString());
 
-        assertEquals(10, pages.get(3).getParagraphs().size());
+        assertEquals(20, pages.get(3).getParagraphs().size());
 
         List<PdfParagraph> lastPageParagraphs = pages.get(4).getParagraphs();
         assertEquals(7, lastPageParagraphs.size());
@@ -177,7 +177,6 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
     }
 
     @Test
-    @Disabled("How should we deal with this... ? Impossible to get 'line height', can just get text height")
     public void testPdfParsingWithParagraphPositionsLargeLineHeightDoc() throws Exception {
         ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
         parse("msa_indemnification.pdf", contentHandler);
@@ -200,10 +199,14 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals("This Master Service Agreement (the â€œMSAâ€�) is entered into between COMPANY A, LLC (â€œCOMPANY Aâ€�), a Georgia limited liability corporation, and PDX COMPANY INC______________________ (â€œClientâ€� or â€œyouâ€�).", pageOneParagraphs.get(1).toString());
         assertEquals("THIS AGREEMENT is dated for reference this 21st day of October, 2003.", pageOneParagraphs.get(2).toString());
         assertEquals("ï»¿Unless otherwise agreed by the parties in writing, Products and Services acquired by XX under this EMA are solely for XX's and its Aﬃliates\\\" own internal use and not for resale or sub-licensing, e. XX may not assign, delegate or otherwise transfer all or any part of this EMA without prior consent from <COMPANY>.", pageOneParagraphs.get(3).toString());
-        assertEquals("If Licensor advises Licensee to remove its facilities, and Licensee refuses to do so, Licensor may remove the facilities and charge the cost and expense of removal to Licensee or deduct the costs and expenses from monies due Licensee under this Agreement, individual Site Licenses or any other agreements. Licensor, in its sole discretion, may allow some or all of Licensee&rsquo;s equipment to remain on Licensor&rsquo;s property. If no such monies are owed, Licensor may invoke any remedies provided herein or at law or equity to recover all monies owed. Except as otherwise provided herein, the fee for use of a Site terminated before the end of the term for that Site License shall not terminate until the later of (1) the effective date of the early termination or (2) the date on which Licensee has removed its equipment and restored the Site in accordance with Section 12(a) or (3) the date on which Licensor notifies Licensee of its election to exercise its option to accept transfer of Licensee's facilities.", pageOneParagraphs.get(4).toString());
-        assertEquals("14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, officers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€TM fees, expertâ€TMs fees and settlement costs) arising out of any.", pageOneParagraphs.get(5).toString());
+        assertEquals("If Licensor advises Licensee to remove its facilities, and Licensee refuses to do so, Licensor may remove the facilities and charge the cost and expense of removal to Licensee or deduct the costs and expenses from monies due Licensee under this Agreement, individual Site Licenses or any other agreements. Licensor, in its sole discretion, may allow some or all of Licensee&rsquo;s equipment to remain on Licensor&rsquo;s property. If no such monies are owed, Licensor may invoke any remedies provided herein or at law or equity to recover all monies owed. Except as otherwise provided herein, the fee for use of a Site terminated before the end of the term for that Site License shall not terminate until the later of (1) the eﬀective date of the early termination or (2) the date on which Licensee has removed its equipment and restored the Site in accordance with Section 12(a) or (3) the date on which Licensor notiﬁes Licensee of its election to exercise its option to accept transfer of Licensee's facilities.", pageOneParagraphs.get(4).toString());
+        assertEquals("14.26 Subject to Sections 11 (Warranties; Disclaimers) and 12 (Limitation of Damages) above, Cirracore shall indemnify, defend and hold Client and its employees, agents, shareholders, oﬃcers, directors, successors, End Users and assigns harmless from and against any and all claims, damages, liabilities, costs, settlements, penalties and expenses (including attorneysâ€™ fees, expertâ€™s fees and settlement costs) arising out of any.", pageOneParagraphs.get(5).toString());
 
-        assertEquals(3, pages.get(3).getParagraphs().size());
+        List<PdfParagraph> pageFourParagraphs = pages.get(3).getParagraphs();
+        assertEquals(3, pageFourParagraphs.size());
+        assertEquals("26.5 Distributor shall have the right of ﬁrst refusal to match the delivered cost to JJC Stores for products that are not delivered by Distributor, which shall remain ﬁrm for the duration of that speciﬁc contract. Any changes to the above pricing formula must have the prior written approval of the JJC's Director of Supply Chain Management.", pageFourParagraphs.get(0).toString());
+        assertEquals("8.5 To the extent that you provide conﬁdential information to us, we shall protect the secrecy of the conﬁdential information with the same degree of care as we use to protect our own conﬁdential information, but in no event with less than due care.", pageFourParagraphs.get(1).toString());
+        assertEquals("(a) Licensee shall at all times and in all respects comply with all federal, state and local laws, ordinance and regulations, including, but not limited to, the Federal Water Pollution Control Act (33 U.S.C. section 1251, et seq.), Resource Conservation and Recovery Act (42 U.S.C. section 6901, et seq.), Safe Drinking Water Act (42 U.S.C. section 300f, et seq.), Toxic Substances Control Act (15 U.S.C. section 2601, et seq.), Clean Air Act (42 U.S.C. section 7401, et seq.), Comprehensive Environmental Response, Compensation and Liability Act (42 U.S.C. section 9601,et seq.), Safe Drinking Water and Toxic Enforcement Act (California Health and Safety Code section 25249.5, et seq.), other applicable provisions of the California Health and Safety Code (section 25100, et seq., and section 39000, et seq.), California Water Code (section 13000, et seq.), and other comparable state laws, regulations and local ordinances relating to industrial hygiene, environmental protection or the use, analysis, generation, manufacture, storage, disposal or transportation of any oil, ﬂammable explosives, asbestos, urea formaldehyde, radioactive materials or waste, or other hazardous, toxic, contaminated or polluting materials, substances or wastes, including, without limitation, any &ldquo;hazardous substances&rdquo; under any such laws, ordinances or regulations (collectively &ldquo;Hazardous Materials Laws&rdquo;). As used in the provisions of this agreement, &ldquo;hazardous materials&rdquo; include any &ldquo;hazardous substance&rdquo; as that term is deﬁned in section 25316 of the California Health and Safety Code or posing a hazard to health or the environment. Except as otherwise expressly permitted in this Agreement, Licensee shall not use, create, store or allow any hazardous materials on the site. Fuel stored in a motor vehicle for the exclusive use in such vehicle is excepted. Back-up generators and the storage of fuel for such generators shall only be allowed if provided in a particular Site License under the conditions of that", pageFourParagraphs.get(2).toString());
     }
 
     @Test
@@ -304,6 +307,85 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(8, pages.get(3).getParagraphs().size());
         assertEquals(8, pages.get(4).getParagraphs().size());
         assertEquals(8, pages.get(5).getParagraphs().size());
-        assertEquals(4, pages.get(6).getParagraphs().size());
+        assertEquals(6, pages.get(6).getParagraphs().size());
+    }
+
+    @Test
+    public void testPdfParsingWithVaryingLineHeightLargePdf() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("CHA_Verizon.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+
+        pages.forEach(page -> {
+            page.getParagraphs().forEach(para -> {
+                assertFalse(para.getTextPositions().isEmpty());
+                assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+                assertFalse(para.toString().contains("\n"));
+            });
+        });
+
+        List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
+        assertEquals(20, pageOneParagraphs.size());
+        assertEquals("Exhibit 10.5", pageOneParagraphs.get(0).toString());
+        assertEquals("Contract No. 750-67761-2004", pageOneParagraphs.get(1).toString());
+        assertEquals("WAP 2.0 HOSTING AGREEMENT", pageOneParagraphs.get(2).toString());
+        assertEquals("PREMIUM WIRELESS SERVICES USA, INC.", pageOneParagraphs.get(3).toString());
+        assertEquals("D/B/A INFOSPACE MOBILE", pageOneParagraphs.get(4).toString());
+        assertEquals("CELLCO PARTNERSHIP", pageOneParagraphs.get(6).toString());
+        assertEquals("d/b/a", pageOneParagraphs.get(7).toString());
+        assertEquals("VERIZON WIRELESS", pageOneParagraphs.get(8).toString());
+        assertEquals("June 24, 2004", pageOneParagraphs.get(9).toString());
+        assertEquals("WAP 2.0 HOSTING AGREEMENT", pageOneParagraphs.get(10).toString());
+        assertEquals("This WAP 2.0 Hosting Agreement (“Agreement”), dated as of June 24, 2004 (the “Effective Date”), is made by and between Premium Wireless Services USA, Inc., a California corporation and a wholly owned subsidiary of InfoSpace, Inc. (“InfoSpace”), with offices at 10940 Wilshire Blvd., 9\u200Bth\u200B Floor, Los Angeles, CA 90024, and Cellco Partnership d/b/a Verizon Wireless (“Verizon Wireless”), a Delaware general partnership, having an office and principal place of business at 180 Washington Valley Road, Bedminster, New Jersey 07921. InfoSpace and Verizon Wireless are sometimes individually referred to herein as a “Party” and may be collectively referred to as the “Parties.”", pageOneParagraphs.get(11).toString());
+        assertEquals("RECITALS", pageOneParagraphs.get(12).toString());
+        assertEquals("A. InfoSpace is in the business of, among other things, providing wireless infrastructure products and services to its customers.", pageOneParagraphs.get(13).toString());
+        assertEquals("B. Verizon Wireless is in the business of, among other things, providing wireless telecommunications services to its customers.", pageOneParagraphs.get(14).toString());
+        assertEquals("C. Verizon Wireless desires that InfoSpace provide access to the products and services more particularly described on Exhibit B (collectively, the “Portal Services”), and InfoSpace is willing to provide access to the Portal Services to Verizon Wireless, pursuant to and in accordance with the terms and conditions set forth in this Agreement.", pageOneParagraphs.get(15).toString());
+        assertEquals("AGREEMENT", pageOneParagraphs.get(16).toString());
+        assertEquals("Now, therefore, in consideration of the foregoing, and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the Parties agree as follows:", pageOneParagraphs.get(17).toString());
+        assertEquals("1 Definitions and Exhibits", pageOneParagraphs.get(18).toString());
+        assertEquals("All capitalized terms shall have the meanings ascribed to them in Exhibit A or as otherwise defined in this Agreement. All exhibits attached to this Agreement are hereby incorporated into, and are an integral part of this", pageOneParagraphs.get(19).toString());
+
+        List<PdfParagraph> pageTwoParagraphs = pages.get(1).getParagraphs();
+        assertEquals(13, pageTwoParagraphs.size());
+        assertEquals("Agreement.", pageTwoParagraphs.get(0).toString());
+        assertEquals("2 Rights and Obligations of the Parties 2.1\u200B \u200BInfoSpace Services.\u200B Subject to the terms and conditions of this Agreement and during the Term, InfoSpace will make available to Verizon Wireless the Portal Services described in Exhibit B.", pageTwoParagraphs.get(1).toString());
+        assertEquals("2.2 Verizon Wireless Materials.\u200B Subject to the terms and conditions of this Agreement and during the Term, Verizon Wireless hereby grants to InfoSpace the right to include and implement the Verizon Wireless Materials on the Portal Services.", pageTwoParagraphs.get(2).toString());
+        assertEquals("2.3\u200B \u200BAccess to Adult Content.\u200B If Verizon Wireless elects to make available adult content under the terms of this Agreement, the Parties shall mutually agree on the terms and conditions governing such availability.", pageTwoParagraphs.get(3).toString());
+        assertEquals("PAGE 1", pageTwoParagraphs.get(4).toString());
+        assertEquals("2.4 Limitations.", pageTwoParagraphs.get(5).toString());
+        assertEquals("a. Other than as explicitly set forth herein, Verizon Wireless and its Affiliates shall have no right to reproduce or sub-license, re-sell or otherwise distribute all or any portion of the Portal Services to any Person except that Verizon Wireless may distribute the Portal Services through its direct distribution channel including its communication stores, websites and its indirect distribution channel, including its authorized agents, retailers and subagents, provided that such distribution and/or sub-distribution is solely within the United States.", pageTwoParagraphs.get(6).toString());
+        assertEquals("b. Unless otherwise agreed to by the Parties, Verizon Wireless shall not authorize or assist any Third Party to: (i) remove, obscure, or alter any legal notices, including notices of Intellectual Property Rights present on or in the Portal Services or any other materials provided by InfoSpace, or (ii) insert any interstitial advertisements, pop-up windows, or other items or techniques that would alter the appearance or presentation of the Portal Services.", pageTwoParagraphs.get(7).toString());
+        assertEquals("c. InfoSpace shall not itself, and neither shall it authorize nor assist any Third Party in: (i) removing, obscuring, or altering any legal notices, including notices of Intellectual Property Rights present on or in the Verizon Wireless Materials or any other materials provided by Verizon Wireless, or (ii) insert any interstitial advertisements, pop-up windows, or other items or techniques that would alter the appearance or presentation of the Verizon Wireless Materials or the Verizon Wireless Services.", pageTwoParagraphs.get(8).toString());
+        assertEquals("d. Other than in connection with its performance under this Agreement, InfoSpace and its Affiliates shall have no right under this Agreement to reproduce or sub-license, re-sell or otherwise distribute all or any portion of the Verizon Wireless Materials to any Person.", pageTwoParagraphs.get(9).toString());
+        assertEquals("e. Each Party shall comply with all then-current applicable laws, rules, and regulations in connection with the exercise of its respective rights and obligations under this Agreement (including, without limitation, any law, rule or regulation related to individual privacy).", pageTwoParagraphs.get(10).toString());
+        assertEquals("f. Neither Party will reverse engineer, disassemble, decompile or otherwise attempt to discover the source code or trade secrets for any of the technology belonging to the other Party. 2.5\u200B \u200BTechnical Cooperation. \u200BEach of the Parties agree to provide reasonable technical cooperation to the other Party in order to implement the Portal Services. In addition, Verizon Wireless shall allow InfoSpace to implement, and/or shall cooperate with InfoSpace upon its request to assist with its implementation of any bug fixes or updates to the Portal Services.", pageTwoParagraphs.get(11).toString());
+        assertEquals("2.6\u200B \u200BProject Management. \u200BEach Party will appoint a single primary point of contact for project management and coordination. This individual will be responsible for coordinating internal teams and activities associated with the deployment of the Portal Services; prioritizing issues and change requests; providing internal communication of project schedule and status; and coordinating meetings and other joint activities between the Parties.", pageTwoParagraphs.get(12).toString());
+
+        List<PdfParagraph> pageEightParagraphs = pages.get(7).getParagraphs();
+        assertEquals(19, pageEightParagraphs.size());
+        assertEquals("Service Level Agreement,***.", pageEightParagraphs.get(0).toString());
+        assertEquals("5.3 Other Operational Obligations.", pageEightParagraphs.get(1).toString());
+        assertEquals("a. Network. During the Term, Verizon Wireless shall use commercially reasonable efforts to maintain the Verizon Wireless Network, and shall provide Users with access to the Portal Services via such Verizon Wireless Network.", pageEightParagraphs.get(2).toString());
+        assertEquals("b. Portal Services Security.", pageEightParagraphs.get(3).toString());
+        assertEquals("To the extent a component of the Portal Services is owned by or under the control of either of the respective Parties, and in addition to the Parties’ specific obligations with regard to viruses (as stated in Section 5.4 of this Agreement), each Party agrees to use reasonable and good faith efforts to maintain the security and integrity of said components.", pageEightParagraphs.get(4).toString());
+        assertEquals("*** This redacted material has been omitted pursuant to a request for confidential treatment, and the material has been filed separately with the Commission.", pageEightParagraphs.get(5).toString());
+        assertEquals("PAGE 9", pageEightParagraphs.get(6).toString());
+        assertEquals("i. In the event that the security and/or integrity of the Portal Services, or any component thereof, is somehow compromised, the Parties agree to notify the other Party of such security compromise as ***, and to use their best efforts to cure said compromise ***.", pageEightParagraphs.get(7).toString());
+        assertEquals("ii. As a part of using their best efforts to cure any compromise, the Parties shall: (A) ***,", pageEightParagraphs.get(8).toString());
+        assertEquals("(B) promptly remove from the Portal Services element(s) affected by the compromise,", pageEightParagraphs.get(9).toString());
+        assertEquals("(C) promptly remedy any adverse condition caused by the compromise,", pageEightParagraphs.get(10).toString());
+        assertEquals("(D) ***,", pageEightParagraphs.get(11).toString());
+        assertEquals("(E) ***", pageEightParagraphs.get(12).toString());
+        assertEquals("(F) *** reinstate any such Portal Services elements that have been removed ***, consistent with the goal of avoiding any further compromise.", pageEightParagraphs.get(13).toString());
+        assertEquals("iii. With respect to compromises for which InfoSpace is solely responsible, if the compromise persists after implementing the remedies set forth in this Section, Verizon Wireless may terminate this Agreement ***.", pageEightParagraphs.get(14).toString());
+        assertEquals("iv. To the extent the process for addressing a compromise set forth in this Section conflicts with the Service Level Agreement, ***.", pageEightParagraphs.get(15).toString());
+        assertEquals("c. Unsolicited Data or Messaging (“Spam”). The Parties agree to implement procedures and to use commercially reasonable efforts to prevent Third Parties from sending or transmitting unsolicited WAP push or SMS messages to Users. Each Party agrees to notify the other Party if it knows or has reason to know that Spam is being sent to Users by Third Parties, and agrees to use commercially reasonable efforts to prevent and/or block", pageEightParagraphs.get(16).toString());
+        assertEquals("*** This redacted material has been omitted pursuant to a request for confidential treatment, and the material has been filed separately with the Commission.", pageEightParagraphs.get(17).toString());
+        assertEquals("PAGE 10", pageEightParagraphs.get(18).toString());
+
+        List<PdfParagraph> lastPageParagraphs = pages.get(pages.size() - 1).getParagraphs();
+        assertEquals("PAGE 129", lastPageParagraphs.get(lastPageParagraphs.size() - 1).toString());
+        assertEquals("*** This redacted material has been omitted pursuant to a request for confidential treatment, and the material has been filed separately with the Commission.", lastPageParagraphs.get(lastPageParagraphs.size() - 2).toString());
     }
 }

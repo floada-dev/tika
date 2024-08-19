@@ -40,25 +40,25 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
 
     }
 
-    void removeEmptyParagraph() {
-
-    }
-
     void addLineSeparator() {
 
     }
 
     void addNewline() {
-        addCharacter(NL, false);
+        List<TextPosition> lastTextPositions = getLastTextPositions();
+        addCharacter(lastTextPositions, NL, false);
     }
 
     void addWhitespace() {
-        addCharacter(WS, true);
+        List<TextPosition> lastTextPositions = getLastTextPositions();
+        addWhitespaceTo(lastTextPositions);
     }
 
-    private void addCharacter(char character, boolean skipRepeats) {
-        List<TextPosition> textPositions = getLastTextPositions();
+    void addWhitespaceTo(List<TextPosition> textPositions) {
+        addCharacter(textPositions, WS, true);
+    }
 
+    private void addCharacter(List<TextPosition> textPositions, char character, boolean skipRepeats) {
         if (textPositions == null || textPositions.isEmpty()) {
             return;
         }
@@ -107,7 +107,7 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
         );
     }
 
-    abstract void nextPage(float width, float height);
+    abstract void endPage(float width, float height);
     abstract void addPositions(List<TextPosition> positions);
     abstract List<TextPosition> getLastTextPositions();
 }

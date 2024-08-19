@@ -2,13 +2,16 @@ package org.apache.tika.parser.pdf;
 
 import org.apache.pdfbox.text.TextPosition;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PdfParagraph {
 
-    private final List<TextPosition> textPositions = new ArrayList<>();
+    private final List<TextPosition> textPositions;
+
+    public PdfParagraph(List<TextPosition> textPositions) {
+        this.textPositions = textPositions;
+    }
 
     public List<TextPosition> getTextPositions() {
         return textPositions;
