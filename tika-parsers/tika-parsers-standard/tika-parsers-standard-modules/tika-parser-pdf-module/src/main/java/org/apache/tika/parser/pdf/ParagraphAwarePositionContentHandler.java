@@ -21,8 +21,10 @@ import org.xml.sax.ContentHandler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
@@ -113,17 +115,22 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     private float findMinLineSpacing() {
-        float minLineSpacing = Float.MAX_VALUE;
+        if (pageTextLines.isEmpty()) return 0f;
+
+        List<Float> lineSpacings = new ArrayList<>();
         for (int i = 0; i < pageTextLines.size() - 1; i++) {
             TextLine curr = pageTextLines.get(i);
             TextLine next = pageTextLines.get(i + 1);
             float lineSpacing = next.topY - curr.bottomY;
             // Negative line spacing means we found "two lines on the same Y coordinates"
             if (lineSpacing > 0) {
-                minLineSpacing = Math.min(minLineSpacing, lineSpacing);
+                lineSpacings.add(lineSpacing);
             }
         }
-        return minLineSpacing;
+        lineSpacings.sort(Comparator.comparing(Function.identity(), Float::compareTo));
+
+        // Remove bottom 15% of smallest line spacing to adjust for things like scanned signature where line boundaries might be broken
+        return lineSpacings.get(Math.round(lineSpacings.size() * 0.15f));
     }
 
     static class TextLine {
