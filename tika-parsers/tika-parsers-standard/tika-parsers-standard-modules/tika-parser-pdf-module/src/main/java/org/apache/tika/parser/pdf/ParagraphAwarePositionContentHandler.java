@@ -25,9 +25,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
+
+    // Java pattern for any whitespace char, including NBSP and ZWSP
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\p{Z}");
 
     private final List<PdfPage> pages = new ArrayList<>();
     private final List<TextLine> pageTextLines = new ArrayList<>();
@@ -54,6 +58,10 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
 
     @Override
     List<TextPosition> getLastTextPositions() {
+        if (pageTextLines.isEmpty()) {
+            return List.of();
+        }
+
         return pageTextLines.get(pageTextLines.size() - 1).textPositions;
     }
 
@@ -70,7 +78,7 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         }
 
         // Do not add blank lines
-        if (positions.stream().allMatch(p -> p.getUnicode().isBlank())) {
+        if (positions.stream().allMatch(p -> isOnlyWhitespace(p.getUnicode()))) {
             return;
         }
 
@@ -82,8 +90,9 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         }
         float avgLineTopY = lineTopYSum / positions.size();
         float avgLineBottomY = lineBottomYSum / positions.size();
+        float startX = positions.get(0).getX();
 
-        pageTextLines.add(new TextLine(avgLineTopY, avgLineBottomY, positions));
+        pageTextLines.add(new TextLine(startX, avgLineTopY, avgLineBottomY, positions));
     }
 
     private List<PdfParagraph> buildParagraphs(float minLineSpacing) {
@@ -92,6 +101,11 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         } else if (pageTextLines.size() == 1) {
             return new ArrayList<>(Collections.singletonList(new PdfParagraph(pageTextLines.get(0).textPositions)));
         }
+
+        pageTextLines.sort(
+                Comparator.<TextLine, Integer>comparing(tl -> Math.round(tl.topY))
+                        .thenComparing(tl -> Math.round(tl.startX))
+        );
 
         List<PdfParagraph> paragraphs = new ArrayList<>();
         List<TextPosition> paragraphTextPositions = new ArrayList<>(pageTextLines.get(0).textPositions);
@@ -115,7 +129,7 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     private float findMinLineSpacing() {
-        if (pageTextLines.isEmpty()) return 0f;
+        if (pageTextLines.size() < 2) return 0f;
 
         List<Float> lineSpacings = new ArrayList<>();
         for (int i = 0; i < pageTextLines.size() - 1; i++) {
@@ -133,12 +147,18 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         return lineSpacings.get(Math.round(lineSpacings.size() * 0.15f));
     }
 
+    private boolean isOnlyWhitespace(String unicode) {
+        return WHITESPACE_PATTERN.matcher(unicode).matches();
+    }
+
     static class TextLine {
+        private final float startX;
         private final float topY;
         private final float bottomY;
         private final List<TextPosition> textPositions;
 
-        TextLine(float topY, float bottomY, List<TextPosition> textPositions) {
+        TextLine(float startX, float topY, float bottomY, List<TextPosition> textPositions) {
+            this.startX = startX;
             this.topY = topY;
             this.bottomY = bottomY;
             this.textPositions = textPositions;
