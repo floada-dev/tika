@@ -31,7 +31,7 @@
 
   <groupId>org.apache.tika</groupId>
   <artifactId>tika-parent</artifactId>
-  <version>3.0.0-floada.beta22</version>
+  <version>3.0.0-floada.beta23</version>
   <packaging>pom</packaging>
 
   <name>Apache Tika parent</name>

@@ -25,13 +25,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ParagraphAwarePositionContentHandler extends PositionContentHandler {
 
-    // Java pattern for any whitespace char, including NBSP and ZWSP
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\p{Z}");
 
     private final List<PdfPage> pages = new ArrayList<>();
     private final List<TextLine> pageTextLines = new ArrayList<>();
@@ -69,11 +66,11 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     void addPositions(List<TextPosition> positions) {
         // Trim whitespace from start and end string (last position)
         ListIterator<TextPosition> positionStartIterator = positions.listIterator();
-        while (positionStartIterator.hasNext() && positionStartIterator.next().getUnicode().isBlank()) {
+        while (positionStartIterator.hasNext() && isOnlyWhitespace(positionStartIterator.next().getUnicode())) {
             positionStartIterator.remove();
         }
         ListIterator<TextPosition> positionEndIterator = positions.listIterator(positions.size());
-        while (positionEndIterator.hasPrevious() && positionEndIterator.previous().getUnicode().isBlank()) {
+        while (positionEndIterator.hasPrevious() && isOnlyWhitespace(positionEndIterator.previous().getUnicode())) {
             positionEndIterator.remove();
         }
 
@@ -148,10 +145,6 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
 
         // Remove bottom 15% of smallest line spacing to adjust for things like scanned signatures where line boundaries might be broken
         return lineSpacings.get(Math.round(lineSpacings.size() * 0.15f));
-    }
-
-    private boolean isOnlyWhitespace(String unicode) {
-        return WHITESPACE_PATTERN.matcher(unicode).matches();
     }
 
     static class TextLine {
