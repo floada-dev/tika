@@ -103,14 +103,14 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         });
 
         assertEquals("Apache Tika - Apache Tika http://incubator.apache.org/tika/", paragraphs.get(0).toString());
-        assertEquals("Tika - Content Analysis Toolkit", paragraphs.get(1).toString());
+        assertEquals("1 of 1 15.9.2007 11:02", paragraphs.get(1).toString());
+        assertEquals("Tika - Content Analysis Toolkit", paragraphs.get(2).toString());
         // Two long paragraphs which were previously split into multiple paragraphs each
-        assertEquals("Apache Tika is a toolkit for detecting and extracting metadata and structured text content from various documents using existing parser libraries.", paragraphs.get(2).toString());
-        assertEquals("Apache Tika is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Lucene PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.", paragraphs.get(3).toString());
-        assertEquals("See the Apache Tika Incubation Status page for the current incubation status.", paragraphs.get(4).toString());
-        assertEquals("Latest News", paragraphs.get(5).toString());
-        assertEquals("March 22nd, 2007: Apache Tika project started The Apache Tika project was formally started when the Tika proposal was accepted by the Apache Incubator PMC.", paragraphs.get(6).toString());
-        assertEquals("1 of 1 15.9.2007 11:02", paragraphs.get(7).toString());
+        assertEquals("Apache Tika is a toolkit for detecting and extracting metadata and structured text content from various documents using existing parser libraries.", paragraphs.get(3).toString());
+        assertEquals("Apache Tika is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Lucene PMC. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.", paragraphs.get(4).toString());
+        assertEquals("See the Apache Tika Incubation Status page for the current incubation status.", paragraphs.get(5).toString());
+        assertEquals("Latest News", paragraphs.get(6).toString());
+        assertEquals("March 22nd, 2007: Apache Tika project started The Apache Tika project was formally started when the Tika proposal was accepted by the Apache Incubator PMC.", paragraphs.get(7).toString());
     }
 
     @Test
@@ -159,7 +159,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(13, pages.get(1).getParagraphs().size());
         assertEquals("(F) Xplore wishes to sell Xplore Products to Distributor and Distributor wishes to purchase such products from Xplore pursuant to the terms and conditions of the Distributor Agreement by entering into this Addendum; and", pages.get(1).getParagraphs().get(0).toString());
 
-        assertEquals(7, pages.get(2).getParagraphs().size());
+        assertEquals(9, pages.get(2).getParagraphs().size());
         assertEquals("IN WITNESS HEREOF, the Parties have executed this Addendum on the dates specified herein.", pages.get(2).getParagraphs().get(0).toString());
 
         assertEquals(20, pages.get(3).getParagraphs().size());
@@ -306,7 +306,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(8, pages.get(3).getParagraphs().size());
         assertEquals(8, pages.get(4).getParagraphs().size());
         assertEquals(8, pages.get(5).getParagraphs().size());
-        assertEquals(3, pages.get(6).getParagraphs().size());
+        assertEquals(6, pages.get(6).getParagraphs().size());
     }
 
     @Test
@@ -407,24 +407,26 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals("EXHIBIT 10.26", pageOneParagraphs.get(0).toString());
         assertEquals("***Confidential treatment requested pursuant to a request for confidential treatment filed with the Securities and Exchange Commission. Omitted portions have been filed separately with the Commission.", pageOneParagraphs.get(1).toString());
         assertEquals("FLEET MAINTENANCE AGREEMENT", pageOneParagraphs.get(2).toString());
-        assertEquals("DATED 13 October 2005", pageOneParagraphs.get(3).toString());
-        assertEquals("DCL DAIRY CREST LIMITED (Company no 2085882) whose registered office is at Claygate House, Littleworth Road, Esher, Surrey KT10 9PN", pageOneParagraphs.get(4).toString());
-        assertEquals("SEV SEV GROUP LIMITED (company no 4463640) whose registered office is at Unit 95/2, Tanfield Lea Industrial Estate North, Stanley, Co Durham, DH9 9NX", pageOneParagraphs.get(5).toString());
-        assertEquals("1. Definitions", pageOneParagraphs.get(6).toString());
-        assertEquals("1.1 In this Agreement:", pageOneParagraphs.get(7).toString());
-        assertEquals("1.1.1 the following expressions have the following meanings unless inconsistent with the context:", pageOneParagraphs.get(8).toString());
-        assertEquals("“the Act” means the Employment Rights Act 1996.", pageOneParagraphs.get(9).toString());
-        assertEquals("“Additional Charges” means the charges to be calculated by SEV on a time and materials basis at the rates described in Clause 7 of this Agreement in respect of the provision of Excepted Services pursuant to Clause 6 of this Agreement.", pageOneParagraphs.get(10).toString());
-        assertEquals("“Agreement” means this agreement including the Schedules and the appendix made between SEV and DCL", pageOneParagraphs.get(11).toString());
-        assertEquals("“Bodywork” means, without limitation, the panels, doors, glazing, trim, seating and any custom built additions not supplied by the original Vehicle manufacturer", pageOneParagraphs.get(12).toString());
-        assertEquals("“CDV” means an Engine powered car derived van included in this Agreement", pageOneParagraphs.get(13).toString());
-        assertEquals("“Charger” means the battery charger and related equipment of an EGV.", pageOneParagraphs.get(14).toString());
-        assertEquals("“Chassis” means the main frame, sub-frames and mounting brackets of the vehicle", pageOneParagraphs.get(15).toString());
-        assertEquals("“Code of Practice” means the HMSO code of practice set out in the appendix", pageOneParagraphs.get(16).toString());
-        assertEquals("“Commencement Date” means 16 October 2005.", pageOneParagraphs.get(17).toString());
-        assertEquals("“Contracted Period” means the period during which this Agreement is in effect.", pageOneParagraphs.get(18).toString());
-        assertEquals("“Contract Procedure Manual” means a separate operating manual that identifies procedures and documentation relevant to this Agreement.", pageOneParagraphs.get(19).toString());
-        assertEquals("“DCL Financial Year” means the period of 12 (twelve) months commencing on the first day of each financial year of DCL during the term of this Agreement as notified by DCL to SEV in writing or as otherwise agreed between the parties in writing (and, in the", pageOneParagraphs.get(20).toString());
+        assertEquals("1. Definitions", pageOneParagraphs.get(3).toString());
+        assertEquals("1.1 In this Agreement:", pageOneParagraphs.get(4).toString());
+        assertEquals("1.1.1 the following expressions have the following meanings unless inconsistent with the context:", pageOneParagraphs.get(5).toString());
+        assertEquals("“the Act” means the Employment Rights Act 1996.", pageOneParagraphs.get(6).toString());
+        assertEquals("“Additional Charges” means the charges to be calculated by SEV on a time and materials basis at the rates described in Clause 7 of this Agreement in respect of the provision of Excepted Services pursuant to Clause 6 of this Agreement.", pageOneParagraphs.get(7).toString());
+        assertEquals("“Agreement” means this agreement including the Schedules and the appendix made between SEV and DCL", pageOneParagraphs.get(8).toString());
+        assertEquals("“Bodywork” means, without limitation, the panels, doors, glazing, trim, seating and any custom built additions not supplied by the original Vehicle manufacturer", pageOneParagraphs.get(9).toString());
+        assertEquals("“CDV” means an Engine powered car derived van included in this Agreement", pageOneParagraphs.get(10).toString());
+        assertEquals("“Charger” means the battery charger and related equipment of an EGV.", pageOneParagraphs.get(11).toString());
+        assertEquals("“Chassis” means the main frame, sub-frames and mounting brackets of the vehicle", pageOneParagraphs.get(12).toString());
+        assertEquals("“Code of Practice” means the HMSO code of practice set out in the appendix", pageOneParagraphs.get(13).toString());
+        assertEquals("“Commencement Date” means 16 October 2005.", pageOneParagraphs.get(14).toString());
+        assertEquals("“Contracted Period” means the period during which this Agreement is in effect.", pageOneParagraphs.get(15).toString());
+        assertEquals("“Contract Procedure Manual” means a separate operating manual that identifies procedures and documentation relevant to this Agreement.", pageOneParagraphs.get(16).toString());
+        assertEquals("“DCL Financial Year” means the period of 12 (twelve) months commencing on the first day of each financial year of DCL during the term of this Agreement as notified by DCL to SEV in writing or as otherwise agreed between the parties in writing (and, in the", pageOneParagraphs.get(17).toString());
+
+        // These are actually higher in the page, per coordinates, but not according to pdf box
+        assertEquals("DATED 13 October 2005", pageOneParagraphs.get(18).toString());
+        assertEquals("DCL DAIRY CREST LIMITED (Company no 2085882) whose registered office is at Claygate House, Littleworth Road, Esher, Surrey KT10 9PN", pageOneParagraphs.get(19).toString());
+        assertEquals("SEV SEV GROUP LIMITED (company no 4463640) whose registered office is at Unit 95/2, Tanfield Lea Industrial Estate North, Stanley, Co Durham, DH9 9NX", pageOneParagraphs.get(20).toString());
 
         // Make sure we handle single line, one paragraph only, page
         List<PdfParagraph> lastPageParagraphs = pages.get(pages.size() - 1).getParagraphs();
@@ -433,10 +435,39 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
     }
 
     @Test
+    public void testPdfWithMultiColumnPages() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("reaserach-paper.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+        assertEquals(14, pages.size());
+
+        pages.forEach(page -> {
+            page.getParagraphs().forEach(para -> {
+                assertFalse(para.getTextPositions().isEmpty());
+                assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+                assertFalse(para.toString().contains("\n"));
+            });
+        });
+
+        List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
+        assertEquals(9, pageOneParagraphs.size());
+        assertEquals("Large-scale Incremental Processing", pageOneParagraphs.get(0).toString());
+        assertEquals("Using Distributed Transactions and Notiﬁcations", pageOneParagraphs.get(1).toString());
+        assertEquals("Daniel Peng and Frank Dabek dpeng@google.com, fdabek@google.com Google, Inc.", pageOneParagraphs.get(2).toString());
+        assertEquals("Abstract", pageOneParagraphs.get(3).toString());
+        assertEquals("Updating an index of the web as documents are crawled requires continuously transforming a large repository of existing documents as new documents ar- rive. This task is one example of a class of data pro- cessing tasks that transform a large repository of data via small, independent mutations. These tasks lie in a gap between the capabilities of existing infrastructure. Databases do not meet the storage or throughput require- ments of these tasks: Google’s indexing system stores tens of petabytes of data and processes billions of up- dates per day on thousands of machines. MapReduce and other batch-processing systems cannot process small up- dates individually as they rely on creating large batches for efﬁciency. We have built Percolator, a system for incrementally processing updates to a large data set, and deployed it to create the Google web search index. By replacing a batch-based indexing system with an indexing system based on incremental processing using Percolator, we process the same number of documents per day, while reducing the average age of documents in Google search results by 50%.", pageOneParagraphs.get(4).toString());
+        assertEquals("1 Introduction", pageOneParagraphs.get(5).toString());
+        assertEquals("Consider the task of building an index of the web that can be used to answer search queries. The indexing sys- tem starts by crawling every page on the web and pro- cessing them while maintaining a set of invariants on the index. For example, if the same content is crawled un- der multiple URLs, only the URL with the highest Page- Rank [28] appears in the index. Each link is also inverted so that the anchor text from each outgoing link is at- tached to the page the link points to. Link inversion must work across duplicates: links to a duplicate of a page should be forwarded to the highest PageRank duplicate if necessary. This is a bulk-processing task that can be expressed as a series of MapReduce [13] operations: one for clus- tering duplicates, one for link inversion, etc. It’s easy to maintain invariants since MapReduce limits the paral-", pageOneParagraphs.get(6).toString());
+        assertEquals("lelism of the computation; all documents ﬁnish one pro- cessing step before starting the next. For example, when the indexing system is writing inverted links to the cur- rent highest-PageRank URL, we need not worry about its PageRank concurrently changing; a previous MapRe- duce step has already determined its PageRank. Now, consider how to update that index after recrawl- ing some small portion of the web. It’s not sufﬁcient to run the MapReduces over just the new pages since, for example, there are links between the new pages and the rest of the web. The MapReduces must be run again over the entire repository, that is, over both the new pages and the old pages. Given enough computing resources, MapReduce’s scalability makes this approach feasible, and, in fact, Google’s web search index was produced in this way prior to the work described here. However, reprocessing the entire web discards the work done in earlier runs and makes latency proportional to the size of the repository, rather than the size of an update. The indexing system could store the repository in a DBMS and update individual documents while using transactions to maintain invariants. However, existing DBMSs can’t handle the sheer volume of data: Google’s indexing system stores tens of petabytes across thou- sands of machines [30]. Distributed storage systems like Bigtable [9] can scale to the size of our repository but don’t provide tools to help programmers maintain data invariants in the face of concurrent updates. An ideal data processing system for the task of main- taining the web search index would be optimized for in- cremental processing; that is, it would allow us to main- tain a very large repository of documents and update it efﬁciently as each new document was crawled. Given that the system will be processing many small updates concurrently, an ideal system would also provide mech- anisms for maintaining invariants despite concurrent up- dates and for keeping track of which updates have been processed. The remainder of this paper describes a particular in- cremental processing system: Percolator. Percolator pro- vides the user with random access to a multi-PB reposi- tory. Random access allows us to process documents in-", pageOneParagraphs.get(7).toString());
+        assertEquals("1", pageOneParagraphs.get(8).toString());
+    }
+
+    @Test
     public void testScannedPdfShouldReturnEmptyPagesOnly() throws Exception {
         ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
         parse("EMPTY - Jos A Bank Amendment.pdf", contentHandler);
         List<PdfPage> pages = contentHandler.getPages();
+
         assertEquals(3, pages.size());
         pages.forEach(page -> {
             assertEquals(0, page.getParagraphs().size());

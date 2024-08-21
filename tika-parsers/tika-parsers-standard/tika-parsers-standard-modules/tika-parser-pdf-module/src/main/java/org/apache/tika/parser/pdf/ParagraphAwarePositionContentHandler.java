@@ -90,9 +90,8 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         }
         float avgLineTopY = lineTopYSum / positions.size();
         float avgLineBottomY = lineBottomYSum / positions.size();
-        float startX = positions.get(0).getX();
 
-        pageTextLines.add(new TextLine(startX, avgLineTopY, avgLineBottomY, positions));
+        pageTextLines.add(new TextLine(avgLineTopY, avgLineBottomY, positions));
     }
 
     private List<PdfParagraph> buildParagraphs(float minLineSpacing) {
@@ -102,19 +101,13 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
             return new ArrayList<>(Collections.singletonList(new PdfParagraph(pageTextLines.get(0).textPositions)));
         }
 
-        pageTextLines.sort(
-                Comparator.<TextLine, Integer>comparing(tl -> Math.round(tl.topY))
-                        .thenComparing(tl -> Math.round(tl.startX))
-        );
-
         List<PdfParagraph> paragraphs = new ArrayList<>();
         List<TextPosition> paragraphTextPositions = new ArrayList<>(pageTextLines.get(0).textPositions);
 
         for (int i = 1; i < pageTextLines.size(); i++) {
             TextLine currLine = pageTextLines.get(i);
             TextLine lastLine = pageTextLines.get(i - 1);
-            // 1.5 * minLineSpacing with 10% leeway
-            if (Math.abs(currLine.topY - lastLine.bottomY) > 1.65 * minLineSpacing) {
+            if (isParagraphSplit(currLine, lastLine, minLineSpacing)) {
                 paragraphs.add(new PdfParagraph(new ArrayList<>(paragraphTextPositions)));
                 paragraphTextPositions.clear();
             }
@@ -126,6 +119,16 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         paragraphs.add(new PdfParagraph(new ArrayList<>(paragraphTextPositions)));
 
         return paragraphs;
+    }
+
+    /**
+     * 1. Use absolute spacing to handle incorrectly ordered text lines where the spacing is huge, but negative.
+     * 2. Require 1.5 * minLineSpacing with 10% leeway.
+     * 3. Require spacing to be greater than line height to handle same line being incorrectly split into multiple by tika.
+     */
+    private boolean isParagraphSplit(TextLine currLine, TextLine lastLine, float minLineSpacing) {
+        float spacing = Math.abs(currLine.topY - lastLine.bottomY);
+        return spacing > 1.65 * minLineSpacing && spacing > currLine.height();
     }
 
     private float findMinLineSpacing() {
@@ -143,7 +146,7 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         }
         lineSpacings.sort(Comparator.comparing(Function.identity(), Float::compareTo));
 
-        // Remove bottom 15% of smallest line spacing to adjust for things like scanned signature where line boundaries might be broken
+        // Remove bottom 15% of smallest line spacing to adjust for things like scanned signatures where line boundaries might be broken
         return lineSpacings.get(Math.round(lineSpacings.size() * 0.15f));
     }
 
@@ -152,16 +155,18 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     static class TextLine {
-        private final float startX;
         private final float topY;
         private final float bottomY;
         private final List<TextPosition> textPositions;
 
-        TextLine(float startX, float topY, float bottomY, List<TextPosition> textPositions) {
-            this.startX = startX;
+        TextLine(float topY, float bottomY, List<TextPosition> textPositions) {
             this.topY = topY;
             this.bottomY = bottomY;
             this.textPositions = textPositions;
+        }
+
+        float height() {
+            return this.bottomY - this.topY;
         }
 
         @Override
