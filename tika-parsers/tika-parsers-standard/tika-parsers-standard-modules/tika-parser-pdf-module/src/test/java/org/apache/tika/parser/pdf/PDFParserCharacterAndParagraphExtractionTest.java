@@ -25,8 +25,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -95,12 +97,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(width, paragraphs.get(0).getTextPositions().get(0).getPageWidth());
         assertEquals(height, paragraphs.get(0).getTextPositions().get(0).getPageHeight());
 
-        paragraphs.forEach(para -> {
-            assertFalse(para.getTextPositions().isEmpty());
-            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-            assertFalse(para.toString().contains("\n"));
-            assertFalse(para.toString().endsWith(" "));
-        });
+        basePositionsAssert(pages);
 
         assertEquals("Apache Tika - Apache Tika http://incubator.apache.org/tika/", paragraphs.get(0).toString());
         assertEquals("1 of 1 15.9.2007 11:02", paragraphs.get(1).toString());
@@ -124,12 +121,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(1, pageOne.getPageNumber());
         List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
 
-        pageOneParagraphs.forEach(para -> {
-            assertFalse(para.getTextPositions().isEmpty());
-            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-            assertFalse(para.toString().contains("\n"));
-            assertFalse(para.toString().endsWith(" "));
-        });
+        basePositionsAssert(pages);
 
         assertEquals(21, pageOneParagraphs.size());
         // Some long line breaking paragraphs should remain as single paragraphs
@@ -186,12 +178,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(1, pageOne.getPageNumber());
         List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
 
-        pageOneParagraphs.forEach(para -> {
-            assertFalse(para.getTextPositions().isEmpty());
-            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-            assertFalse(para.toString().contains("\n"));
-            assertFalse(para.toString().endsWith(" "));
-        });
+        basePositionsAssert(pages);
 
         assertEquals(6, pageOneParagraphs.size());
         assertEquals("INDEMNIFICATION AGREEMENT", pageOneParagraphs.get(0).toString());
@@ -219,12 +206,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(1, pageOne.getPageNumber());
         List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
 
-        pageOneParagraphs.forEach(para -> {
-            assertFalse(para.getTextPositions().isEmpty());
-            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-            assertFalse(para.toString().contains("\n"));
-            assertFalse(para.toString().endsWith(" "));
-        });
+        basePositionsAssert(pages);
 
         assertEquals(8, pageOneParagraphs.size());
         assertEquals("INDEMNIFICATION AGREEMENT", pageOneParagraphs.get(0).toString());
@@ -273,12 +255,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(1, pageOne.getPageNumber());
         List<PdfParagraph> pageOneParagraphs = pageOne.getParagraphs();
 
-        pageOneParagraphs.forEach(para -> {
-            assertFalse(para.getTextPositions().isEmpty());
-            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-            assertFalse(para.toString().contains("\n"));
-            assertFalse(para.toString().endsWith(" "));
-        });
+        basePositionsAssert(pages);
 
         assertEquals(13, pageOneParagraphs.size());
         assertEquals("EXHIBIT 10.18", pageOneParagraphs.get(0).toString());
@@ -315,13 +292,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         parse("CHA_Verizon.pdf", contentHandler);
         List<PdfPage> pages = contentHandler.getPages();
 
-        pages.forEach(page -> {
-            page.getParagraphs().forEach(para -> {
-                assertFalse(para.getTextPositions().isEmpty());
-                assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-                assertFalse(para.toString().contains("\n"));
-            });
-        });
+        basePositionsAssert(pages);
 
         List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
         assertEquals(20, pageOneParagraphs.size());
@@ -394,13 +365,7 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         parse("SMITHELECTRICVEHICLESCO_FLEET MAINTENANCE.pdf", contentHandler);
         List<PdfPage> pages = contentHandler.getPages();
 
-        pages.forEach(page -> {
-            page.getParagraphs().forEach(para -> {
-                assertFalse(para.getTextPositions().isEmpty());
-                assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-                assertFalse(para.toString().contains("\n"));
-            });
-        });
+        basePositionsAssert(pages);
 
         List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
         assertEquals(21, pageOneParagraphs.size());
@@ -435,19 +400,38 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
     }
 
     @Test
+    public void testPdfLinesEndingWithNBSP() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("RoyaleEnergy.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+        assertEquals(5, pages.size());
+
+        basePositionsAssert(pages);
+
+        List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
+        assertEquals(12, pageOneParagraphs.size());
+        assertEquals("Exhibit 10.10", pageOneParagraphs.get(0).toString());
+        assertEquals("CONSULTING AGREEMENT", pageOneParagraphs.get(1).toString());
+        assertEquals("This Consulting Agreement (this “\u200BAgreement\u200B\u200B”) is entered into effective as of March 1, 2018, by and between Royale Energy, Inc., (“\u200BRoyale\u200B\u200B”), and Meeteetse Limited Partnership (tax ID 56-2298132) (“\u200BConsultant\u200B\u200B”).", pageOneParagraphs.get(2).toString());
+
+        List<PdfParagraph> pageThreeParagraphs = pages.get(2).getParagraphs();
+        assertEquals(6, pageThreeParagraphs.size());
+        assertEquals("association, or other entity for any reason or purpose whatsoever, except as is generally available to the public or as specifically allowed in writing by an authorized representative of Royale. This \u200Bsubsection (b) will indefinitely survive the expiration or termination of this Agreement.", pageThreeParagraphs.get(0).toString());
+        assertEquals("(c)     \u200B\u200BReturn of Confidential Information\u200B\u200B. Upon the expiration of the term or termination of this Agreement, Consultant will surrender to Royale all tangible Confidential Information in the possession of, or under the control of, Consultant, including, but without limitation, the originals and all copies of all software, drawings, manuals, letters, notes, notebooks, reports, and all other media, material, and records of any kind, and all copies thereof pertaining to Confidential Information acquired or developed by Consultant during the term of Consultant's employment (including the period preceding the Effective Date).", pageThreeParagraphs.get(1).toString());
+        assertEquals("(d)     \u200B\u200BNon-Solicitation\u200B\u200B. During the term of this Agreement and for a period of one year after termination of the Agreement (the Applicable Period), Consultant will not induce, or attempt to induce, any employee or independent contractor of Royale to cease such employment or contractual relationship with Royale. Consultant furthermore agrees that in the event an employee or independent contractor terminates their employment or contractual relationship with Royale, or such employee or independent contractor is terminated by Royale, Consultant, without the prior written consent of Royale will not, during the Applicable Period, directly or indirectly, offer employment to, employ, or enter into any agreement or contract with (whether written or oral) such employee or independent contractor, or in any other manner deal with such employee or contractor; \u200Bprovided\u200B, that the provisions of this subsection (d) shall not apply to contacts with or solicitations of any person who was an associated person of Royale immediately prior to execution of the Purchase Agreement.", pageThreeParagraphs.get(2).toString());
+        assertEquals("(e)     \u200B\u200BRight to Injunctive Relief\u200B\u200B. Consultant acknowledges that a violation or attempted violation on his part of any agreement in this \u200BSection 5 will cause irreparable damage to the Royale and its affiliates, and accordingly Consultant agrees that the Royale shall be entitled as a manner of right to an injunction, out of any court of competent jurisdiction restraining any violation or further violation of such agreements by Consultant; such right to an injunction, however, shall be cumulative and in addition to whatever other remedies the Royale may have. The terms and agreements set forth in this \u200BSection 5 shall survive the expiration of the term or termination of this Agreement for any reason. The existence of any claim of Consultant, whether predicated on this Agreement or otherwise, shall not constitute a defense to the enforcement by the Royale of the agreements contained in this Section 5\u200B.", pageThreeParagraphs.get(3).toString());
+        assertEquals("Page 3", pageThreeParagraphs.get(4).toString());
+        assertEquals("(f)     \u200B\u200BIndependent Contractor\u200B\u200B. Royale and Consultant agree that in the performance of the services contemplated herein, Consultant shall be, and is, an independent contractor, and this Agreement shall not be construed to create any association, partnership, joint venture, employee, or agency relationship between Consultant and Royale for any purpose. Consultant will be responsible for tools, equipment and all other supplies needed to fully perform its services under the contract. Consultant has and shall retain the right to exercise full control over the employment, direction, compensation and discharge of all persons assisting Consultant. Consultant shall be solely responsible for, and shall hold Royale harmless from all matters relating to the payment of Consultant’s employees, including compliance with the Social Security Administration, Internal Revenue Service, withholdings and all other regulations governing such matters. Consultant has no authority (and shall not hold itself out as having authority) to bind Royale and Consultant shall not make any agreements or representations on Royale’s behalf without Royale’s prior written consent. Consultant and its employees or contractors will not be eligible to participate in any vacation, group medical or life insurance, disability, profit sharing or retirement benefits, or any other fringe benefits or benefit plans offered by Royale to its employees, and Royale will not be responsible for withholding or paying any income, payroll, Social Security, or other federal, state, or local taxes, making any insurance contributions, including for unemployment or disability, or obtaining workers' compensation insurance on Consultant’s behalf. Consultant shall be responsible for, and shall indemnify Royale against, all such taxes or contributions, including penalties and ", pageThreeParagraphs.get(5).toString());
+    }
+
+    @Test
     public void testPdfWithMultiColumnPages() throws Exception {
         ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
         parse("reaserach-paper.pdf", contentHandler);
         List<PdfPage> pages = contentHandler.getPages();
         assertEquals(14, pages.size());
 
-        pages.forEach(page -> {
-            page.getParagraphs().forEach(para -> {
-                assertFalse(para.getTextPositions().isEmpty());
-                assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
-                assertFalse(para.toString().contains("\n"));
-            });
-        });
+        basePositionsAssert(pages);
 
         List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
         assertEquals(9, pageOneParagraphs.size());
@@ -472,5 +456,35 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         pages.forEach(page -> {
             assertEquals(0, page.getParagraphs().size());
         });
+    }
+
+    private void basePositionsAssert(List<PdfPage> pages) {
+        pages.forEach(page -> page.getParagraphs().forEach(para -> {
+            assertFalse(para.getTextPositions().isEmpty());
+            assertFalse(para.toString().contains("\n"));
+            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+
+            Set<Map.Entry<Float, List<TextPosition>>> textPositionsPerLine = para.getTextPositions().stream()
+                    .collect(Collectors.groupingBy(
+                                    TextPosition::getY,
+                                    Collectors.filtering(
+                                            // Remove ZWSP any other empty, but valid, chars
+                                            tp -> tp.getX() != tp.getEndX(),
+                                            Collectors.toList())
+                            )
+                    )
+                    .entrySet();
+
+            assertFalse(textPositionsPerLine.isEmpty());
+
+            for (Map.Entry<Float, List<TextPosition>> linePositionsEntry : textPositionsPerLine) {
+                List<TextPosition> linePositions = linePositionsEntry.getValue();
+                for (int i = 0; i < linePositions.size() - 1; i++) {
+                    TextPosition curr = linePositions.get(i);
+                    TextPosition next = linePositions.get(i + 1);
+                    assertTrue(next.getX() > curr.getX());
+                }
+            }
+        }));
     }
 }

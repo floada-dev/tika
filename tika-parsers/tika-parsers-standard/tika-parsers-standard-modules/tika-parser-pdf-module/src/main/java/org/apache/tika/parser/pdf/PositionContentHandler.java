@@ -22,8 +22,12 @@ import org.apache.tika.sax.ContentHandlerDecorator;
 import org.xml.sax.ContentHandler;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 public abstract class PositionContentHandler extends ContentHandlerDecorator {
+
+    // Java pattern for any whitespace char, including NBSP and ZWSP
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\p{Z}");
 
     private static final char NL = '\n';
     private static final char WS = ' ';
@@ -58,13 +62,17 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
         addCharacter(textPositions, WS, true);
     }
 
+    boolean isOnlyWhitespace(String unicode) {
+        return WHITESPACE_PATTERN.matcher(unicode).matches();
+    }
+
     private void addCharacter(List<TextPosition> textPositions, char character, boolean skipRepeats) {
         if (textPositions == null || textPositions.isEmpty()) {
             return;
         }
 
         TextPosition last = textPositions.get(textPositions.size() - 1);
-        if (character == NL && " ".equals(last.getUnicode())) {
+        if (character == NL && isOnlyWhitespace(last.getUnicode())) {
             textPositions.remove(last);
             if (textPositions.isEmpty()) {
                 return;
@@ -74,7 +82,7 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
         }
 
         String stringChar = String.valueOf(character);
-        if (skipRepeats && stringChar.equals(last.getUnicode())) {
+        if (skipRepeats && ((character == NL && stringChar.equals(last.getUnicode())) || (character == WS && isOnlyWhitespace(last.getUnicode())))) {
             return;
         }
 
@@ -108,6 +116,8 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
     }
 
     abstract void endPage(float width, float height);
+
     abstract void addPositions(List<TextPosition> positions);
+
     abstract List<TextPosition> getLastTextPositions();
 }
