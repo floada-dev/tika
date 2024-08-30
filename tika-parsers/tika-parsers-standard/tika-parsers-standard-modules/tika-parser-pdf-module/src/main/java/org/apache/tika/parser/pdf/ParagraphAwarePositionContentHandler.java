@@ -143,6 +143,11 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
         }
         lineSpacings.sort(Comparator.comparing(Function.identity(), Float::compareTo));
 
+        // Only negative line spacings, see comment above.
+        if (lineSpacings.isEmpty()) {
+            return 0f;
+        }
+
         // Remove bottom 15% of smallest line spacing to adjust for things like scanned signatures where line boundaries might be broken
         return lineSpacings.get(Math.round(lineSpacings.size() * 0.15f));
     }
