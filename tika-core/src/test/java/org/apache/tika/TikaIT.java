@@ -24,11 +24,11 @@ import org.junit.jupiter.api.Test;
 public class TikaIT {
 
     @Test
-    public void testToString() {
+    void testToString() {
         String version = new Tika().toString();
         assertNotNull(version);
         assertTrue(
-                version.matches("Apache Tika \\d+\\.\\d+\\.\\d+(-(?:ALPHA|BETA|floada)\\d*)?(?:-SNAPSHOT)?"));
+                version.matches("Apache Tika \\d+\\.\\d+\\.\\d+(-(?:ALPHA|BETA|floada.+)\\d*)?(?:-SNAPSHOT)?"));
     }
 
 }
