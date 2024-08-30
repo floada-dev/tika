@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>3.0.0-floada.beta23</version>
+    <version>3.0.0-floada.beta24</version>
     <relativePath>../tika-parent/pom.xml</relativePath>
   </parent>
 

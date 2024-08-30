@@ -425,6 +425,37 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
     }
 
     @Test
+    public void testPdfWithMultiplePagesWithSingleOrDoubleLinesOnly() throws Exception {
+        ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
+        parse("Software-Evaluation-Agreement-COMPANY-TECHNOLOGY-template-2016.pdf", contentHandler);
+        List<PdfPage> pages = contentHandler.getPages();
+        assertEquals(11, pages.size());
+
+        basePositionsAssert(pages);
+
+        List<PdfParagraph> pageOneParagraphs = pages.get(0).getParagraphs();
+        assertEquals(2, pageOneParagraphs.size());
+        assertEquals("DATED 18/05/16 SOFTWARE EVALUATION AGREEMENT", pageOneParagraphs.get(0).toString());
+        assertEquals("between UNIVERSITY COLLEGE DUBLIN and COMPANY", pageOneParagraphs.get(1).toString());
+
+        List<PdfParagraph> pageSevenParagraphs = pages.get(6).getParagraphs();
+        assertEquals(2, pageSevenParagraphs.size());
+        assertEquals("5", pageSevenParagraphs.get(0).toString());
+        assertEquals("Schedule 1 Software CeADAR Technology Demonstrator: TECHNOLOGY", pageSevenParagraphs.get(1).toString());
+
+        List<PdfParagraph> pageEightParagraphs = pages.get(7).getParagraphs();
+        assertEquals(2, pageEightParagraphs.size());
+        assertEquals("6", pageEightParagraphs.get(0).toString());
+        assertEquals("Schedule 2 System", pageEightParagraphs.get(1).toString());
+
+        List<PdfParagraph> pageNineParagraphs = pages.get(8).getParagraphs();
+        assertEquals(3, pageNineParagraphs.size());
+        assertEquals("7", pageNineParagraphs.get(0).toString());
+        assertEquals("Schedule 3 Trial Period", pageNineParagraphs.get(1).toString());
+        assertEquals("The Software may be evaluated for two (2) months from the date of signing of this agreement.", pageNineParagraphs.get(2).toString());
+    }
+
+    @Test
     public void testPdfWithMultiColumnPages() throws Exception {
         ParagraphAwarePositionContentHandler contentHandler = new ParagraphAwarePositionContentHandler(new BodyContentHandler(-1));
         parse("reaserach-paper.pdf", contentHandler);
