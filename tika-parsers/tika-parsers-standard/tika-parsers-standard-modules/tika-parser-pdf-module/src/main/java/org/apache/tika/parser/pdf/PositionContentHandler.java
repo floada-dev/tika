@@ -115,7 +115,7 @@ public abstract class PositionContentHandler extends ContentHandlerDecorator {
         );
     }
 
-    abstract void endPage(float width, float height);
+    abstract void endPage(float width, float height, int rotation);
 
     abstract void addPositions(List<TextPosition> positions);
 
