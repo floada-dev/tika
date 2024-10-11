@@ -39,7 +39,7 @@ public class CharacterPositionContentHandler extends PositionContentHandler {
     }
 
     @Override
-    void endPage(float width, float height) {
+    void endPage(float width, float height, int rotation) {
         pageNumber++;
     }
 

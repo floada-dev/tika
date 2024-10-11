@@ -42,12 +42,12 @@ public class ParagraphAwarePositionContentHandler extends PositionContentHandler
     }
 
     @Override
-    void endPage(float width, float height) {
+    void endPage(float width, float height, int rotation) {
         float minLineSpacing = findMinLineSpacing();
         List<PdfParagraph> paragraphs = buildParagraphs(minLineSpacing);
 
         int pageNumber = pages.size() + 1;
-        PdfPage pdfPage = new PdfPage(pageNumber, width, height, paragraphs);
+        PdfPage pdfPage = new PdfPage(pageNumber, width, height, rotation, paragraphs);
 
         pages.add(pdfPage);
         pageTextLines.clear();

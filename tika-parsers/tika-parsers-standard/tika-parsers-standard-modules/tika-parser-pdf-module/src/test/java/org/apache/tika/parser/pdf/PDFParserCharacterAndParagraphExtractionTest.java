@@ -486,36 +486,40 @@ public class PDFParserCharacterAndParagraphExtractionTest extends TikaTest {
         assertEquals(3, pages.size());
         pages.forEach(page -> {
             assertEquals(0, page.getParagraphs().size());
+            assertEquals(270, page.getRotation());
         });
     }
 
     private void basePositionsAssert(List<PdfPage> pages) {
-        pages.forEach(page -> page.getParagraphs().forEach(para -> {
-            assertFalse(para.getTextPositions().isEmpty());
-            assertFalse(para.toString().contains("\n"));
-            assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
+        pages.forEach(page -> {
+            assertEquals(0, page.getRotation());
+            page.getParagraphs().forEach(para -> {
+                assertFalse(para.getTextPositions().isEmpty());
+                assertFalse(para.toString().contains("\n"));
+                assertTrue(para.getTextPositions().stream().noneMatch(tp -> tp.getUnicode().isEmpty()));
 
-            Set<Map.Entry<Float, List<TextPosition>>> textPositionsPerLine = para.getTextPositions().stream()
-                    .collect(Collectors.groupingBy(
-                                    TextPosition::getY,
-                                    Collectors.filtering(
-                                            // Remove ZWSP any other empty, but valid, chars
-                                            tp -> tp.getX() != tp.getEndX(),
-                                            Collectors.toList())
-                            )
-                    )
-                    .entrySet();
+                Set<Map.Entry<Float, List<TextPosition>>> textPositionsPerLine = para.getTextPositions().stream()
+                        .collect(Collectors.groupingBy(
+                                        TextPosition::getY,
+                                        Collectors.filtering(
+                                                // Remove ZWSP any other empty, but valid, chars
+                                                tp -> tp.getX() != tp.getEndX(),
+                                                Collectors.toList())
+                                )
+                        )
+                        .entrySet();
 
-            assertFalse(textPositionsPerLine.isEmpty());
+                assertFalse(textPositionsPerLine.isEmpty());
 
-            for (Map.Entry<Float, List<TextPosition>> linePositionsEntry : textPositionsPerLine) {
-                List<TextPosition> linePositions = linePositionsEntry.getValue();
-                for (int i = 0; i < linePositions.size() - 1; i++) {
-                    TextPosition curr = linePositions.get(i);
-                    TextPosition next = linePositions.get(i + 1);
-                    assertTrue(next.getX() > curr.getX());
+                for (Map.Entry<Float, List<TextPosition>> linePositionsEntry : textPositionsPerLine) {
+                    List<TextPosition> linePositions = linePositionsEntry.getValue();
+                    for (int i = 0; i < linePositions.size() - 1; i++) {
+                        TextPosition curr = linePositions.get(i);
+                        TextPosition next = linePositions.get(i + 1);
+                        assertTrue(next.getX() > curr.getX());
+                    }
                 }
-            }
-        }));
+            });
+        });
     }
 }
