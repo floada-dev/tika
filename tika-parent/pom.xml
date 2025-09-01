@@ -1790,4 +1790,12 @@
     <developerConnection>scm:git:https://github.com/apache/tika.git</developerConnection>
     <url>https://github.com/apache/tika</url>
   </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/floada-dev/tika</url>
+    </repository>
+  </distributionManagement>
 </project>
