@@ -337,7 +337,7 @@ public abstract class TikaTest {
     }
 
     protected void parse(String filePath, ContentHandler handler) throws Exception {
-        try (InputStream input = getResourceAsStream("/test-documents/" + filePath)) {
+        try (TikaInputStream input = getResourceAsStream("/test-documents/" + filePath)) {
             ParseContext context = new ParseContext();
             Metadata metadata = new Metadata();
             AUTO_DETECT_PARSER.parse(input, handler, metadata, context);
